@@ -33,22 +33,22 @@
             GF_SERVER_ENFORCE_DOMAIN: "true"
             GF_LOG_LEVEL: debug
             GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_passwd }}"
-
-- name: Configure grafana
-  uri:
-      url: "{{ nginx_external_url }}/grafana/api/datasources"
-      user: admin
-      password: "{{ grafana_admin_passwd }}"
-      method: POST
-      body:
-        name: influx
-        type: influxdb
-        url: http://{{ docker_ip }}:{{ servicePorts['influxdb'] }}
-        access: proxy
-        jsonData: {}
-        secureJsonFields: {}
-        isDefault: true
-        database: graphite
-      force_basic_auth: yes
-      status_code: 200
-      body_format: json
+#
+# - name: Configure grafana
+#   uri:
+#       url: "{{ nginx_external_url }}/grafana/api/datasources"
+#       user: admin
+#       password: "{{ grafana_admin_passwd }}"
+#       method: POST
+#       body:
+#         name: influx
+#         type: influxdb
+#         url: http://{{ docker_ip }}:{{ servicePorts['influxdb'] }}
+#         access: proxy
+#         jsonData: {}
+#         secureJsonFields: {}
+#         isDefault: true
+#         database: graphite
+#       force_basic_auth: yes
+#       status_code: 200
+#       body_format: json

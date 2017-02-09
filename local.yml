@@ -10,3 +10,4 @@
     - include: "marathon/grafana.yml"
     - include: "marathon/collectd.yml"
     - include: "marathon/buildbot.yml"
+    - include: "marathon/ngrok.yml"

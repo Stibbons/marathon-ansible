@@ -14,11 +14,11 @@
           type: DOCKER
           volumes: []
           docker:
-            image: buildbot/buildbot-master-pypy:0.9.3_485
+            image: forestscribe/buildbot-config
             network: BRIDGE
             privileged: false
             parameters: []
-            forcePullImage: true
+            forcePullImage: false
             portMappings:
             - containerPort: 9989
               protocol: tcp
@@ -28,14 +28,15 @@
               servicePort: "{{ servicePorts['buildbot_www'] }}"
         env:
             BUILDBOT_CONFIG_DIR: config
-            BUILDBOT_CONFIG_URL: https://github.com/tardyp/ci_perfs/archive/master.tar.gz
+            BUILDBOT_CONFIG_URL: https://github.com/forestscribe/buildbot-config/archive/master.tar.gz
             BUILDBOT_WORKER_PORT: '9989'
-            BUILDBOT_WEB_URL: "{{ nginx_external_url }}/buildbot/"  # HOST and PORT1 are from the environ (implemented in master.cfg)
+            BUILDBOT_WEB_URL: "{{ nginx_external_url }}:{{ servicePorts['buildbot_www'] }}/"
             BUILDBOT_WEB_PORT: '8080'
             BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts['postgres']}}/{{POSTGRES_DB}}
             BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts['crossbar']}}
             BUILDBOT_MQ_REALM: realm1
             https_proxy: "{{proxy_env['https_proxy']}}"
+            MARATHON_URL: "{{ marathon_uri }}"
         labels:
           HAPROXY_GROUP: external
           HAPROXY_0_BIND_ADDR: 172.17.0.1
