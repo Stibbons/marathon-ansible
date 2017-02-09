@@ -1,0 +1,70 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: set project vars
+      znode:
+        hosts: "{{ zookeeper_uri }}"
+        name: "/etc/{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+      with_dict: "{{ cloud_conf }}"
+
+    - name: set hostports
+      znode:
+        hosts: "{{ zookeeper_uri }}"
+        name: "/etc/hostPorts/{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+      with_dict: "{{ hostPorts }}"  
+
+    - name: set serviceports
+      znode:
+        hosts: "{{ zookeeper_uri }}"
+        name: "/etc/hostPorts/{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+      with_dict: "{{ servicePorts }}"
+
+        
+  vars: 
+    zookeeper_uri: "{{ ansible_env.ZOOKEEPER_URI }}"
+    marathon_num_agents: 6
+    cloud_conf:
+       docker_interface_ip: 172.17.0.1
+       marathon_uri: "{{ ansible_env.MARATHON_URI }}"
+       zookeeper_worker_path: "{{ ansible_env.ZOOKEEPER_URI }}workers/ids/"
+       influxdb_conf_url: "{{ ansible_env.INFLUXDB_CONF_URL | default('https://raw.githubusercontent.com/tardyp/ci_perfs/master/marathon/influxdb/influxdb.conf') }}"
+       nginx_external_url: "{{ ansible_env.NGINX_EXTERNAL_URL }}"
+       grafana_admin_passwd: "{{ ansible_env.GRAFANA_ADMIN_PASSWD | default('admin') }}"
+       mesos_slaves_num_agent: 6 
+       grafana_admin_passwd: admin 
+       postgres_user: buildbot 
+       postgres_passwd: change_me 
+       postgres_db: buildbot 
+
+    hostPorts:
+    
+        nginx_http:       80
+        nginx_ssl:        443
+    
+        collectd:         20010
+        marathon_lb:      20011
+    
+    # service ports are defined globally, and used for service discovery
+    servicePorts:
+        influxdb:         30010
+        graphite:         30011
+        influxdb_admin:   30012
+    
+        grafana:          30020
+    
+        buildbot_www:     30030
+        buildbot_worker:  30031
+    
+        postgres:         30040
+    
+        crossbar:         30050
+    
+        ngrok:            30060
+    
