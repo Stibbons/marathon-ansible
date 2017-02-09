@@ -1,0 +1,35 @@
+- name: Deploy artifactory on marathon
+  hosts: localhost
+  tasks:
+    - marathon:
+        marathon_uri: "{{ marathon_uri }}"
+        app_id: artifactory
+        wait_quiet: 'true'
+        app_json:
+            id: artifactory
+            cpus: 1
+            mem: 2024
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes:
+              - containerPath: "artidata"
+                mode: "RW"
+                persistent: 
+                 type: "root"
+                 size: 10000
+              - containerPath: "/var/opt/jfrog/artifactory"
+                hostPath: "artidata"
+                mode: "RW"
+              docker:
+                image: "docker.bintray.io/jfrog/artifactory-oss:latest"
+                network: BRIDGE
+                privileged: false
+                parameters: []
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8081
+                  hostPort: 28081
+                  protocol: tcp
+                  servicePort: 28081
