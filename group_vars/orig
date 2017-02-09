@@ -29,20 +29,16 @@ servicePorts:
     ngrok:            30060
 
 
+docker_ip: 172.17.0.1
 
-zookeeper_uri: "{{ ansible_env.ZOOKEEPER_URI }}"
-from_zk_conf: "{{ zookeeper_uri | conf_from_zkpath('/etc') }}"
-docker_ip: "{{  from_zk_conf.docker_interface_ip }}" 
-docker_interface_ip: "{{ from_zk_conf.docker_interface_ip }}"
-
-marathon_uri: "{{ from_zk_conf.marathon_uri }}"
-zookeeper_worker_path: "{{ from_zk_conf.zookeeper_worker_path }}"
-influxdb_conf_url: "{{ from_zk_conf.influxdb_conf_url }}"
-nginx_external_url: "{{ from_zk_conf.nginx_external_url }}"
-grafana_admin_passwd: "{{ from_zk_conf.grafana_admin_passwd }}"
+marathon_uri: "{{ ansible_env.MARATHON_URI }}"
+zookeeper_worker_path: "{{ ansible_env.ZOOKEEPER_URI }}workers/ids/"
+influxdb_conf_url: "{{ ansible_env.INFLUXDB_CONF_URL | default('https://raw.githubusercontent.com/tardyp/ci_perfs/master/marathon/influxdb/influxdb.conf') }}"
+nginx_external_url: "{{ ansible_env.NGINX_EXTERNAL_URL }}"
+grafana_admin_passwd: "{{ ansible_env.GRAFANA_ADMIN_PASSWD | default('admin') }}"
 # PG config for buildbot
-POSTGRES_USER: "{{ from_zk_conf.POSTGRES_USER }}"
-POSTGRES_PASSWORD: "{{ from_zk_conf.POSTGRES_PASSWORD }}"
-POSTGRES_DB: "{{ from_zk_conf.POSTGRES_DB }}"
+POSTGRES_USER: buildbot
+POSTGRES_PASSWORD: change_me
+POSTGRES_DB: buildbot
 
 proxy_env: "{{ {} | proxies_from_env }}"
