@@ -33,10 +33,13 @@
             BUILDBOT_WEB_URL: "{{ nginx_external_url }}:{{ servicePorts['buildbot_www'] }}/"
             BUILDBOT_WEB_PORT: '8080'
             BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts['postgres']}}/{{POSTGRES_DB}}
-            BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts['crossbar']}}
-            BUILDBOT_MQ_REALM: realm1
+            # BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts['crossbar']}}
+            # BUILDBOT_MQ_REALM: realm1
             https_proxy: "{{proxy_env['https_proxy']}}"
             MARATHON_URL: "{{ marathon_uri }}"
+            GITHUB_TOKEN: "{{ github_status_token }}"
+            BUILDMASTER_LB_HOST: "{{ docker_ip }}"
+            BUILDMASTER_LB_PORT: "{{ servicePorts['buildbot_worker'] }}"
         labels:
           HAPROXY_GROUP: external
           HAPROXY_0_BIND_ADDR: 172.17.0.1
@@ -51,3 +54,31 @@
           timeoutSeconds: 20
           maxConsecutiveFailures: 3
           ignoreHttp1xx: false
+
+- name: Deploy nginx forwarder for buildbot hooks
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: nginxbbhooks
+    app_json:
+        id: nginxbbhooks
+        cpus: .1
+        mem: 256
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          volumes: []
+          docker:
+            image: forestscribe/nginx-simple-proxy
+            network: BRIDGE
+            portMappings:
+            - containerPort: 80
+              protocol: tcp
+              servicePort: "{{ servicePorts['buildbot_hooks'] }}"
+        env:
+            NGINX_PORT: "80"
+            SERVERNAME: buildbot_hooks
+            PROXY_PASS: http://{{ docker_ip }}:{{ servicePorts['buildbot_www'] }}/change_hook/github/
+        labels:
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1

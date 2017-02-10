@@ -4,7 +4,7 @@
     marathon_uri: "{{ marathon_uri }}"
     app_id: ngrok
     app_json:
-        cmd: ngrok http {{ docker_ip }}:{{ servicePorts['buildbot_www'] }}/hooks
+        cmd: ngrok http {{ docker_ip }}:{{ servicePorts['buildbot_hooks'] }}
         cpus: 0.5
         mem: 64
         disk: 0
@@ -26,3 +26,14 @@
         labels:
           HAPROXY_GROUP: external
           HAPROXY_BIND_ADDR: 172.17.0.1
+
+        healthChecks:
+        -
+          path: /api/tunnels
+          protocol: HTTP
+          portIndex: 0
+          gracePeriodSeconds: 300
+          intervalSeconds: 60
+          timeoutSeconds: 20
+          maxConsecutiveFailures: 3
+          ignoreHttp1xx: false

@@ -21,6 +21,7 @@ servicePorts:
 
     buildbot_www:     30030
     buildbot_worker:  30031
+    buildbot_hooks:   30032
 
     postgres:         30040
 
@@ -36,6 +37,7 @@ zookeeper_worker_path: "{{ ansible_env.ZOOKEEPER_URI }}workers/ids/"
 influxdb_conf_url: "{{ ansible_env.INFLUXDB_CONF_URL | default('https://raw.githubusercontent.com/tardyp/ci_perfs/master/marathon/influxdb/influxdb.conf') }}"
 nginx_external_url: "{{ ansible_env.NGINX_EXTERNAL_URL }}"
 grafana_admin_passwd: "{{ ansible_env.GRAFANA_ADMIN_PASSWD | default('admin') }}"
+github_status_token:  "{{ ansible_env.GITHUB_STATUS_TOKEN }}"
 # PG config for buildbot
 POSTGRES_USER: buildbot
 POSTGRES_PASSWORD: change_me
