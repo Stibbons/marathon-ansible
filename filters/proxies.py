@@ -3,7 +3,7 @@ import urlparse
 
 
 def proxies_from_env(ret):
-    for env in ['http_proxy', 'https_proxy', 'no_proxy']:
+    for env in ['http_proxy', 'https_proxy', 'no_proxy', 'ALL_PROXY']:
         if env in os.environ:
             ret[env] = os.environ[env]
     return ret

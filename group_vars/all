@@ -29,6 +29,9 @@ servicePorts:
 
     ngrok:            30060
 
+    artifactory:      30070
+
+    etc:              30080
 
 docker_ip: 172.17.0.1
 

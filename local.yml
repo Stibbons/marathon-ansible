@@ -4,6 +4,7 @@
   tasks:
     # order is important (until we implement marathon groups)
     - include: "marathon/marathonlb.yml"
+    - include: "marathon/etc.yml"
     - include: "marathon/crossbar.yml"
     - include: "marathon/pg.yml"
     - include: "marathon/influxdb.yml"
