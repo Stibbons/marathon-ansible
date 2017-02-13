@@ -28,7 +28,7 @@ servicePorts:
 
     ngrok:            30060
 
-    artifactory:      30070
+    artifactory:      28081
 
     zk_http:          30080
 

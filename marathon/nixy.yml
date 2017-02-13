@@ -43,3 +43,5 @@
 
         healthChecks:
         - "{{ basic_http_health_check }}"
+        upgradeStrategy:
+            minimumHealthCapacity: 0.5
