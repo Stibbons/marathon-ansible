@@ -45,12 +45,12 @@ zk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
 
 marathon_uri: "{{ zk.cloud.marathon_uri }}"
 nginx_external_url: "{{ zk.cloud.nginx_external_url }}"
-github_status_token:  "{{ zk.cloud.github_status_token }}"
+github_status_token:  "{{ zk.secrets.github_status_token }}"
 
 # PG config for buildbot
-POSTGRES_USER: "{{ zk.secrets.POSTGRES_USER }}"
-POSTGRES_PASSWORD: "{{ zk.secrets.POSTGRES_PASSWORD }}"
-POSTGRES_DB: "{{ zk.secrets.POSTGRES_DB }}"
+POSTGRES_USER: "{{ zk.secrets.postgres_user }}"
+POSTGRES_PASSWORD: "{{ zk.secrets.postgres_passwd }}"
+POSTGRES_DB: "{{ zk.secrets.postgres_db }}"
 
 proxy_env: "{{ zk.proxy_env }}"
 
