@@ -31,19 +31,35 @@ servicePorts:
 
     artifactory:      30070
 
-    etc:              30080
+    zk_http:          30080
 
-docker_ip: 172.17.0.1
 
-marathon_uri: "{{ ansible_env.MARATHON_URI }}"
-zookeeper_worker_path: "{{ ansible_env.ZOOKEEPER_URI }}workers/ids/"
-influxdb_conf_url: "{{ ansible_env.INFLUXDB_CONF_URL | default('https://raw.githubusercontent.com/tardyp/ci_perfs/master/marathon/influxdb/influxdb.conf') }}"
-nginx_external_url: "{{ ansible_env.NGINX_EXTERNAL_URL }}"
-grafana_admin_passwd: "{{ ansible_env.GRAFANA_ADMIN_PASSWD | default('admin') }}"
-github_status_token:  "{{ ansible_env.GITHUB_STATUS_TOKEN }}"
+zk_host: "{{ ansible_env.ZK_HOST }}"
+zookeeper_uri: "zk://{{ zookeeper_host }}"
+zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
+
+docker_ip: "{{  zk.cloud.docker_interface_ip }}"
+
+# config files can be downloaded via marathon_uri using this service (see influxdb for an example)
+zk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
+
+marathon_uri: "{{ zk.cloud.marathon_uri }}"
+nginx_external_url: "{{ zk.cloud.nginx_external_url }}"
+github_status_token:  "{{ zk.cloud.github_status_token }}"
+
 # PG config for buildbot
-POSTGRES_USER: buildbot
-POSTGRES_PASSWORD: change_me
-POSTGRES_DB: buildbot
+POSTGRES_USER: "{{ zk.secrets.POSTGRES_USER }}"
+POSTGRES_PASSWORD: "{{ zk.secrets.POSTGRES_PASSWORD }}"
+POSTGRES_DB: "{{ zk.secrets.POSTGRES_DB }}"
 
-proxy_env: "{{ {} | proxies_from_env }}"
+proxy_env: "{{ zk.proxy_env }}"
+
+basic_http_health_check:
+    path: /
+    protocol: HTTP
+    portIndex: 0
+    gracePeriodSeconds: 300
+    intervalSeconds: 60
+    timeoutSeconds: 20
+    maxConsecutiveFailures: 3
+    ignoreHttp1xx: false

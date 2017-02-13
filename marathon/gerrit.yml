@@ -1,0 +1,35 @@
+- name: Deploy gerrit on marathon
+  hosts: localhost
+  tasks:
+    - marathon:
+        marathon_uri: "{{ marathon_uri }}"
+        app_id: gerrit
+        wait_quiet: 'true'
+        app_json:
+            id: gerrit
+            cpus: 1
+            mem: 1024
+            disk: 0
+            instances: 6
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: "openfrontier/gerrit"
+                network: BRIDGE
+                privileged: false
+                parameters: []
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8080
+                  hostPort: 28080
+                  protocol: tcp
+                - containerPort: 29418
+                  hostPort: 29418
+                  protocol: tcp
+                  #servicePort: "23444"
+            #env:
+            #    WEBURL: {{ frontend_uri }}:28080 \
+            #    DATABASE_TYPE: postgresql 
+            #    DATABASE_SERVER: localhost 
+            #    DATABASE_SERVER_PORT: 5432 

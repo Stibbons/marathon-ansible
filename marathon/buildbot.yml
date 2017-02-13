@@ -35,10 +35,10 @@
             BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts['postgres']}}/{{POSTGRES_DB}}
             # BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts['crossbar']}}
             # BUILDBOT_MQ_REALM: realm1
-            https_proxy: "{{proxy_env['https_proxy']}}"
-            http_proxy: "{{proxy_env['http_proxy']}}"
-            no_proxy: "{{proxy_env['no_proxy']}}"
-            ALL_PROXY: "{{proxy_env['ALL_PROXY']}}"
+            https_proxy: "{{proxy_env.https_proxy}}"
+            http_proxy: "{{proxy_env.http_proxy}}"
+            no_proxy: "{{proxy_env.no_proxy}}"
+            ALL_PROXY: "{{proxy_env.ALL_PROXY}}"
             MARATHON_URL: "{{ marathon_uri }}"
             GITHUB_TOKEN: "{{ github_status_token }}"
             BUILDMASTER_LB_HOST: "{{ docker_ip }}"

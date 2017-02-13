@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: load secrets
+      # edit with ansible-vault edit --vault-password-file=~/.vault-password.forestscribe zk_init_file.yml
+      include_vars: "zk_init_file.yml"
+      tags: always
+
+    - name: reset etc
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "/etc"
+        state: absent
+        recursive: true
+
+    - name: set cloud confs
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "/etc/cloud/{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+      with_dict: "{{ zk_conf.cloud }}"
+
+    - name: set secrets confs
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "/etc/secrets/{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+      with_dict: "{{ zk_conf.secrets }}"
+
+    - name: set proxy confs
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "/etc/proxy_env/{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+      with_dict: "{{ zk_conf.proxy_env }}"
