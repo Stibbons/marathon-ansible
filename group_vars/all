@@ -2,7 +2,6 @@
 ---
 
  # hostsPorts is used to put one service into every agent. It uses host port reservation to ensure this
-marathon_num_agents: 6
 hostPorts:
 
     nginx_http:       80
@@ -39,6 +38,7 @@ zookeeper_uri: "zk://{{ zookeeper_host }}"
 zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
 
 docker_ip: "{{  zk.cloud.docker_interface_ip }}"
+marathon_num_agents: "{{ zk.cloud.mesos_num_agents}}"
 
 # config files can be downloaded via marathon_uri using this service (see influxdb for an example)
 zk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"

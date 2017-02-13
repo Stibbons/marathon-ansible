@@ -1,0 +1,12 @@
+# nixy listening port
+port = "6000"
+# optional X-Proxy header name
+xproxy = "hostname"
+# marathon api
+user = "" # leave empty if no auth is required.
+pass = ""
+# nginx
+nginx_config = "/etc/nginx/nginx.conf"
+nginx_template = "/mnt/mesos/sandbox/nginx.tmpl"
+nginx_cmd = "nginx" # optionally openresty
+marathon = ["{{marathon_uri}}"]
