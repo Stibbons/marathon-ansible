@@ -4,14 +4,15 @@
   tasks:
     # order is important (until we implement marathon groups)
 
-    - include: "marathon/marathonlb.yml"
-    #- include: "marathon/zk_http.yml"
+    # - include: "marathon/marathonlb.yml"
+    # - include: "marathon/zk_http.yml"
     - include: "marathon/nixy.yml"
+    - include: "marathon/sota_server.yml"
     # - include: "marathon/influxdb.yml"
-    - include: "marathon/grafana.yml"
-    - include: "marathon/collectd.yml"
+    # - include: "marathon/grafana.yml"
+    # - include: "marathon/collectd.yml"
     # - include: "marathon/crossbar.yml"
-    - include: "marathon/pg.yml"
-    - include: "marathon/buildbot.yml"
-    - include: "marathon/artifactory.yml"
+    # - include: "marathon/pg.yml"
+    # - include: "marathon/buildbot.yml"
+    # - include: "marathon/artifactory.yml"
 #    - include: "marathon/ngrok.yml"

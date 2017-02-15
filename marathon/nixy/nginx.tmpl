@@ -54,9 +54,52 @@ http {
         {{- range $id, $app := .Apps}}
         {{- if $app.Labels.upstream_name }}
         {{- range $app.Hosts}}
+        {{- if eq '/' (index . 0) }}
         location {{.}} {
+            {{- if $app.Labels.no_buffering }}
+                proxy_buffering off;
+                proxy_request_buffering off;
+                client_max_body_size 0;
+                proxy_read_timeout 600s;
+                proxy_send_timeout 600s;
+            {{- end }}
             proxy_pass http://{{$app.Labels.upstream_name}}/;
         }
+        {{- end }}
+        {{- end }}
+        {{- end}}
+        {{- end}}
+    }
+        {{- range $id, $app := .Apps}}
+        {{- if $app.Labels.upstream_name }}
+        {{- range $app.Hosts}}
+        {{- if ne '/' (index . 0) }}
+
+    server {
+        listen 7000;
+        server_name {{.}} {{.}}.intel.com {{.}}.forestscribe.intel.com;
+        proxy_set_header HOST $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto  $scheme;
+        proxy_set_header X-Forwarded-Server  $host;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+        proxy_connect_timeout 30;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        location / {
+            {{- if $app.Labels.no_buffering }}
+                proxy_buffering off;
+                proxy_request_buffering off;
+                client_max_body_size 0;
+                proxy_read_timeout 600s;
+                proxy_send_timeout 600s;
+            {{- end }}
+            proxy_pass http://{{$app.Labels.upstream_name}}/;
+        }
+        {{- end }}
         {{- end }}
         {{- end}}
         {{- end}}

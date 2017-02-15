@@ -1,0 +1,260 @@
+---
+- name: Deploy sota/maria
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/maria
+    app_json:
+        args: ["--character-set-server=utf8", "--collation-server=utf8_unicode_ci", "--max-connections=1000"]
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: advancedtelematic/mariadb:stable
+            network: BRIDGE
+            portMappings:
+            - containerPort: 3306
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_maria }}"
+        labels:
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        env:
+          MYSQL_ROOT_PASSWORD: "sota-test"
+          MYSQL_USER: "sota"
+          MYSQL_PASSWORD: "s0ta"
+          MYSQL_DATABASES: "sota_resolver sota_resolver_test sota_resolver% sota_core sota_core_test sota_core% sota_device_registry% sota_device_registry sota_device_registry_test"
+        healthChecks:
+        - "{{ basic_tcp_health_check }}"
+
+- name: Deploy sota/nats
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/nats
+    app_json:
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: nats:0.8.1
+            network: BRIDGE
+            portMappings:
+            - containerPort: 4222
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_nats }}"
+        labels:
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        healthChecks:
+        - "{{ basic_tcp_health_check }}"
+
+
+- name: Deploy sota/deviceregistry
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/deviceregistry
+    wait_quiet: 'true'
+    app_json:
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: advancedtelematic/sota-device_registry
+            network: BRIDGE
+            portMappings:
+            - containerPort: 8083
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_device_registry }}"
+        labels:
+          subdomain: '/sota-registry/'
+          upstream_name: 'sotaregistry'
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        env:
+            HOST: 0.0.0.0
+            PORT: "8083"
+            DEVICE_REGISTRY_DB_URL: "jdbc:mariadb://{{ docker_ip }}:{{ servicePorts.sota_maria }}/sota_device_registry"
+            DEVICE_REGISTRY_DB_MIGRATE: 'true'
+            NATS_HOST: '{{ docker_ip }}'
+            NATS_PORT: '{{ servicePorts.sota_nats }}'
+            DB_ALIVE_URL: "{{ docker_ip }}:{{ servicePorts.sota_maria }}"
+            AUTH_PROTOCOL: "none"
+        healthChecks:
+        -   path: /api/v1/devices
+            protocol: HTTP
+            portIndex: 0
+            gracePeriodSeconds: 300
+            intervalSeconds: 60
+            timeoutSeconds: 20
+            maxConsecutiveFailures: 3
+            ignoreHttp1xx: false
+
+- name: Deploy sota/resolver
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/resolver
+    wait_quiet: 'true'
+    app_json:
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: advancedtelematic/sota-resolver
+            network: BRIDGE
+            portMappings:
+            - containerPort: 8081
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_resolver }}"
+        labels:
+          subdomain: '/sota-resolver/'
+          upstream_name: 'sotaresolver'
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        env:
+            HOST: 0.0.0.0
+            PORT: "8081"
+            RESOLVER_DB_URL: "jdbc:mariadb://{{ docker_ip }}:{{ servicePorts.sota_maria }}/sota_resolver"
+            RESOLVER_DB_MIGRATE: 'true'
+            DEVICE_REGISTRY_API_URI: "{{ nginx_external_url }}/sota-registry/"
+            NATS_HOST: '{{ docker_ip }}'
+            NATS_PORT: '{{ servicePorts.sota_nats }}'
+            PACKAGES_VERSION_FORMAT: ".+"
+            DB_ALIVE_URL: "{{ docker_ip }}:{{ servicePorts.sota_maria }}"
+            AUTH_PROTOCOL: "none"
+        healthChecks:
+        -   path: /api/v1/resolver/devices
+            protocol: HTTP
+            portIndex: 0
+            gracePeriodSeconds: 300
+            intervalSeconds: 60
+            timeoutSeconds: 20
+            maxConsecutiveFailures: 3
+            ignoreHttp1xx: false
+
+
+- name: Deploy sota/core
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/core
+    wait_quiet: 'true'
+    app_json:
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: advancedtelematic/sota-core
+            network: BRIDGE
+            portMappings:
+            - containerPort: 8080
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_core }}"
+        labels:
+          subdomain: '/sota-core/'
+          upstream_name: 'sotacore'
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        env:
+            HOST: 0.0.0.0
+            PORT: "8080"
+            CORE_DB_URL: "jdbc:mariadb://{{ docker_ip }}:{{ servicePorts.sota_maria }}/sota_core"
+            CORE_DB_MIGRATE: 'true'
+            CORE_INTERACTION_PROTOCOL: 'none'
+            DB_ALIVE_URL: "{{ docker_ip }}:{{ servicePorts.sota_maria }}"
+            DEVICE_REGISTRY_API_URI: "{{ nginx_external_url }}/sota-registry/"
+            NATS_HOST: '{{ docker_ip }}'
+            NATS_PORT: '{{ servicePorts.sota_nats }}'
+            RESOLVER_API_URI: "{{ nginx_external_url }}/sota-resolver/"
+            PACKAGES_VERSION_FORMAT: ".+"
+            AUTH_PROTOCOL: "none"
+        healthChecks:
+        -   path: /api/v1/devices
+            protocol: HTTP
+            portIndex: 0
+            gracePeriodSeconds: 300
+            intervalSeconds: 60
+            timeoutSeconds: 20
+            maxConsecutiveFailures: 3
+            ignoreHttp1xx: false
+
+
+- name: Deploy sota/ldap
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/ldap
+    wait_quiet: 'true'
+    app_json:
+        cmd: null
+        args: ["--loglevel", "debug"]
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: advancedtelematic/openldap:genivi
+            network: BRIDGE
+            portMappings:
+            - containerPort: 389
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_ldap }}"
+        labels:
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        healthChecks:
+        - "{{ basic_tcp_health_check }}"
+
+- name: Deploy sota/webserver
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    app_id: sota/webserver
+    wait_quiet: 'true'
+    app_json:
+        cpus: 1
+        mem: 1024
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: advancedtelematic/sota-webserver
+            network: BRIDGE
+            portMappings:
+            - containerPort: 9000
+              protocol: tcp
+              servicePort: "{{ servicePorts.sota_webserver }}"
+        labels:
+          subdomain: 'ota'
+          upstream_name: 'sota'
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        env:
+            HOST: "0.0.0.0"
+            PORT: "9000"
+            CORE_API_URI: "{{ nginx_external_url }}/sota-core/"
+            DEVICE_REGISTRY_API_URI: "{{ nginx_external_url }}/sota-registry/"
+            NATS_HOST: '{{ docker_ip }}'
+            NATS_PORT: '{{ servicePorts.sota_nats }}'
+            RESOLVER_API_URI: "{{ nginx_external_url }}/sota-resolver/"
+            PLAY_CRYPTO_SECRET: "YM5B6o<ywKn4tTyA;tOZ<2xUEajF4DDi=O/PPm1Q^w2LqtKISd9oqYT6b>>C1gQa"
+            LDAP_HOST: "{{ docker_ip }}"
+            LDAP_PORT: "{{ servicePorts.sota_ldap }}"
+            LDAP_AUTHN_ID: "cn=admin,dc=genivi,dc=org"
+            LDAP_PASSWORD: "admin"
+
+        healthChecks:
+        - "{{ basic_http_health_check }}"

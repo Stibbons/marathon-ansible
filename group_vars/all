@@ -32,6 +32,14 @@ servicePorts:
 
     zk_http:          30080
 
+    sota_maria:           30100
+    sota_nats:            30101
+    sota_device_registry: 30102
+    sota_resolver:        30103
+    sota_core:            30104
+    sota_ldap:            30105
+    sota_webserver:       30106
+
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zookeeper_host }}"
@@ -63,3 +71,11 @@ basic_http_health_check:
     timeoutSeconds: 20
     maxConsecutiveFailures: 3
     ignoreHttp1xx: false
+
+basic_tcp_health_check:
+    protocol: TCP
+    portIndex: 0
+    gracePeriodSeconds: 300
+    intervalSeconds: 60
+    timeoutSeconds: 20
+    maxConsecutiveFailures: 3
