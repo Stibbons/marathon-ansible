@@ -12,7 +12,20 @@
         instances: 0
         container:
           type: DOCKER
-          volumes: []
+          volumes: [
+                    {
+                        "containerPath": "buildbot-data",
+                        "mode": "RW",
+                        "persistent": {
+                            "type": "root",
+                            "size": 300000
+                        }
+                    }, {
+                        "containerPath": "/buildbot-worker",
+                        "hostPath": "buildbot-data",
+                        "mode": "RW"
+                    }
+                ]
           docker:
             #image:  "buildbot/buildbot-master-pypy:worker-0.8.14"
             #image:  "buildbot/buildbot-worker:master"
@@ -21,9 +34,15 @@
             privileged: false
             parameters: []
             forcePullImage: false
+        residency: { "taskLostBehavior": "WAIT_FOREVER" }
+
+        "upgradeStrategy": {
+            "minimumHealthCapacity": 0.5,
+            "maximumOverCapacity": 0
+        }
         env:
             BUILDMASTER: "{{ docker_ip }}"
             BUILDMASTER_PORT: "{{ servicePorts['buildbot_worker'] }}"
-            WORKERNAME: "worker{{ '{' + zookeeper_worker_path + '}'}}"
+            WORKERNAME: "worker"
             WORKERPASS: pass
             WORKER_ENVIRONMENT_BLACKLIST: DOCKER_BUILDBOT* BUILDBOT_ENV_* BUILDBOT_1* WORKER_ENVIRONMENT_BLACKLIST

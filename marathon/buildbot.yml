@@ -20,12 +20,12 @@
             parameters: []
             forcePullImage: false
             portMappings:
-            - containerPort: 9989
-              protocol: tcp
-              servicePort: "{{ servicePorts['buildbot_worker'] }}"
             - containerPort: 8080
               protocol: tcp
               servicePort: "{{ servicePorts['buildbot_www'] }}"
+            - containerPort: 9989
+              protocol: tcp
+              servicePort: "{{ servicePorts['buildbot_worker'] }}"
         env:
             BUILDBOT_CONFIG_DIR: config
             BUILDBOT_CONFIG_URL: https://github.com/forestscribe/buildbot-config/archive/master.tar.gz
@@ -43,15 +43,18 @@
             GITHUB_TOKEN: "{{ github_status_token }}"
             BUILDMASTER_LB_HOST: "{{ docker_ip }}"
             BUILDMASTER_LB_PORT: "{{ servicePorts['buildbot_worker'] }}"
+            ART_OUTPUT_URL: "http://admin:admin@{{ nginx_external_url | host_from_url }}/artifactory/"
         labels:
           HAPROXY_GROUP: external
-          HAPROXY_0_BIND_ADDR: 172.17.0.1
+          HAPROXY_BIND_ADDR: 172.17.0.1
+          subdomain: '/buildbot/'
+          upstream_name: 'buildbot'
 
         healthChecks:
         -
           path: /
           protocol: HTTP
-          portIndex: 1
+          portIndex: 0
           gracePeriodSeconds: 300
           intervalSeconds: 60
           timeoutSeconds: 20
@@ -81,7 +84,7 @@
         env:
             NGINX_PORT: "80"
             SERVERNAME: buildbot_hooks
-            PROXY_PASS: http://{{ docker_ip }}:{{ servicePorts['buildbot_www'] }}/change_hook/github/
+            PROXY_PASS: "{{ nginx_external_url }}/buildbot/change_hook/github/"
         labels:
           HAPROXY_GROUP: external
           HAPROXY_BIND_ADDR: 172.17.0.1

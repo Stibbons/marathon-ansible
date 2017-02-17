@@ -22,6 +22,8 @@
               protocol: tcp
               servicePort: "{{ servicePorts.zk_http }}"
         labels:
+          subdomain: '/zkhttp/'
+          upstream_name: 'zkhttp'
           HAPROXY_GROUP: external
           HAPROXY_BIND_ADDR: 172.17.0.1
         env:

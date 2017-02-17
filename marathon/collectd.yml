@@ -29,3 +29,6 @@
             APP_ENV_KEY: MARATHON_APP_ID
             TASK_ENV_KEY: MESOS_TASK_ID
             COLLECTD_HOST: MESOS
+        upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0

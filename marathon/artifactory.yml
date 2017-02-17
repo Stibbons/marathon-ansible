@@ -30,6 +30,11 @@
               hostPort: 28081
               protocol: tcp
               servicePort: "{{ servicePorts.artifactory }}"
+        residency:
+            taskLostBehavior: "WAIT_FOREVER"
+        upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0
         labels:
-          HAPROXY_GROUP: external
-          HAPROXY_BIND_ADDR: 172.17.0.1
+          subdomain: '/'
+          upstream_name: 'artifactory'

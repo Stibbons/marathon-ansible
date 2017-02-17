@@ -22,3 +22,6 @@
             privileged: false
             parameters: []
             forcePullImage: false
+        upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0

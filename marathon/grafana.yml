@@ -27,6 +27,8 @@
         labels:
           HAPROXY_GROUP: external
           HAPROXY_BIND_ADDR: 172.17.0.1
+          subdomain: '/grafana/'
+          upstream_name: 'grafana'
         env:
             GF_SERVER_ROOT_URL: "{{ nginx_external_url }}/grafana/"
             GF_SERVER_DOMAIN: "{{ nginx_external_url | host_from_url }}"

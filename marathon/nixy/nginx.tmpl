@@ -28,46 +28,34 @@ http {
     keepalive_timeout 10;
 
     {{- range $id, $app := .Apps}}
-    {{ if $app.Labels.HAPROXY_GROUP }}
-    {{- range $app.Hosts}}
-    upstream {{.}} {
-        {{ if eq $id "/buildbot" }}
-        {{- range $app.Tasks}}
-        server {{ .Host }}:{{ index .Ports 1 }};
-        {{- end}}
-        {{ else }}
+    {{- if $app.Labels.upstream_name }}
+    upstream {{ $app.Labels.upstream_name }} {
         {{- range $app.Tasks}}
         server {{ .Host }}:{{ index .Ports 0 }};
         {{- end}}
-        {{ end }}
     }
-    {{ end }}
-    {{- end}}
+    {{- end }}
     {{- end}}
 
     server {
         listen 7000;
         server_name forestscribe forestscribe.intel.com;
+        proxy_set_header HOST $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto  $scheme;
+        proxy_set_header X-Forwarded-Server  $host;
+        proxy_set_header X-Forwarded-Host  $host;
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+        proxy_connect_timeout 30;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
         {{- range $id, $app := .Apps}}
-        {{ if $app.Labels.HAPROXY_GROUP }}
+        {{- if $app.Labels.upstream_name }}
         {{- range $app.Hosts}}
-        {{ if eq $id "/artifactory" }}
-        location / {
-        {{ else }}
-        location /{{.}}/ {
-        {{ end }}
-            proxy_set_header HOST $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto  $scheme;
-            proxy_set_header X-Forwarded-Server  $host;
-            proxy_set_header X-Forwarded-Host  $host;
-            proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-            proxy_connect_timeout 30;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_pass http://{{.}}/;
+        location {{.}} {
+            proxy_pass http://{{$app.Labels.upstream_name}}/;
         }
         {{- end }}
         {{- end}}
