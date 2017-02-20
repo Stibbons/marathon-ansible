@@ -4,4 +4,5 @@
   tasks:
     # # order is important (until we implement marathon groups)
     #- include: "core/lb.yml"
-    - include: "core/metrics.yml"
+    #- include: "core/metrics.yml"
+    - include: "core/logging.yml"

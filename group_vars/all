@@ -18,6 +18,12 @@ servicePorts:
 
     grafana:          30020
 
+    elasticsearch:     30025
+    logstashapi:      30026
+    kibana:            30027
+    syslog:            30028
+    logstash:          30029
+
     buildbot_www:     30030
     buildbot_worker:  30031
     buildbot_hooks:   30032
