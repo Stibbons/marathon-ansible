@@ -3,7 +3,5 @@
   connection: local
   tasks:
     # # order is important (until we implement marathon groups)
-    # - include: "core/sota_server.yml"
-    # - include: "core/influxdb.yml"
-    # - include: "core/grafana.yml"
-    # - include: "core/collectd.yml"
+    #- include: "core/lb.yml"
+    - include: "core/metrics.yml"
