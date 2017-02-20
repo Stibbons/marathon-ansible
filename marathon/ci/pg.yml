@@ -2,6 +2,7 @@
 - name: Deploy pg
   marathon:
     marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
     app_id: pg
     app_json:
         id: "pg"

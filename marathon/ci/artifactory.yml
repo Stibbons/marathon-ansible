@@ -1,5 +1,6 @@
 - marathon:
     marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
     app_id: artifactory
     wait_quiet: 'true'
     app_json:

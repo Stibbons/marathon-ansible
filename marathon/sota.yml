@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    # order is important (until we implement marathon groups)
+    - include: "sota/sota_server.yml"

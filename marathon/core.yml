@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    # order is important (until we implement marathon groups)
+    - include: "core/corelb.yml"
+    - include: "core/zk_http.yml"
+    - include: "core/nixy.yml"
+    - include: "core/sota_server.yml"
+    - include: "core/influxdb.yml"
+    - include: "core/grafana.yml"
+    - include: "core/collectd.yml"

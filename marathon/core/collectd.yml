@@ -2,6 +2,7 @@
 - name: Deploy collectd
   marathon:
     marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
     app_id: collectd
     app_json:
         cmd:

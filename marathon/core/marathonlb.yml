@@ -2,6 +2,7 @@
 - name: Deploy marathon_lb
   marathon:
     marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
     app_id: marathonlb
     wait_quiet: true
     app_json:

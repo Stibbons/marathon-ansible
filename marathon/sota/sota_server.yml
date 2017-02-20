@@ -1,8 +1,9 @@
 ---
-- name: Deploy sota/maria
+- name: Deploy maria
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/maria
+    marathon_group: "{{ marathon_group }}"
+    app_id: maria
     app_json:
         args: ["--character-set-server=utf8", "--collation-server=utf8_unicode_ci", "--max-connections=1000"]
         cpus: 1
@@ -29,10 +30,11 @@
         healthChecks:
         - "{{ basic_tcp_health_check }}"
 
-- name: Deploy sota/nats
+- name: Deploy nats
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/nats
+    marathon_group: "{{ marathon_group }}"
+    app_id: nats
     app_json:
         cpus: 1
         mem: 1024
@@ -54,10 +56,11 @@
         - "{{ basic_tcp_health_check }}"
 
 
-- name: Deploy sota/deviceregistry
+- name: Deploy deviceregistry
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/deviceregistry
+    marathon_group: "{{ marathon_group }}"
+    app_id: deviceregistry
     wait_quiet: 'true'
     app_json:
         cpus: 1
@@ -97,10 +100,11 @@
             maxConsecutiveFailures: 3
             ignoreHttp1xx: false
 
-- name: Deploy sota/resolver
+- name: Deploy resolver
   marathon:
+    marathon_group: "{{ marathon_group }}"
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/resolver
+    app_id: resolver
     wait_quiet: 'true'
     app_json:
         cpus: 1
@@ -143,10 +147,11 @@
             ignoreHttp1xx: false
 
 
-- name: Deploy sota/core
+- name: Deploy core
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/core
+    marathon_group: "{{ marathon_group }}"
+    app_id: core
     wait_quiet: 'true'
     app_json:
         cpus: 1
@@ -191,10 +196,11 @@
             ignoreHttp1xx: false
 
 
-- name: Deploy sota/ldap
+- name: Deploy ldap
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/ldap
+    marathon_group: "{{ marathon_group }}"
+    app_id: ldap
     wait_quiet: 'true'
     app_json:
         cmd: null
@@ -218,10 +224,11 @@
         healthChecks:
         - "{{ basic_tcp_health_check }}"
 
-- name: Deploy sota/webserver
+- name: Deploy webserver
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: sota/webserver
+    marathon_group: "{{ marathon_group }}"
+    app_id: webserver
     wait_quiet: 'true'
     app_json:
         cpus: 1

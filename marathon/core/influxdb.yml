@@ -15,6 +15,7 @@
     - name: Deploy influxdb
       marathon:
         marathon_uri: "{{ marathon_uri }}"
+        marathon_group: "{{ marathon_group }}"
         app_id: influxdb
         app_json:
             id: "influxdb"

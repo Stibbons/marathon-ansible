@@ -2,6 +2,7 @@
 - name: Deploy ngrok
   marathon:
     marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
     app_id: ngrok
     app_json:
         cmd: ngrok http {{ docker_ip }}:{{ servicePorts['buildbot_hooks'] }}

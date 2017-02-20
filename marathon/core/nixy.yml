@@ -15,6 +15,7 @@
 - name: Deploy nixy on marathon
   marathon:
     marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
     app_id: nixy
     app_json:
         id: nixy

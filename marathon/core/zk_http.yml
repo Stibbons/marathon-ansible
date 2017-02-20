@@ -1,0 +1,34 @@
+- name: Deploy zk_http on marathon
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    marathon_group: "{{ marathon_group }}"
+    app_id: zkhttp
+    wait_quiet: 'true'
+    app_json:
+        id: zkhttp
+        cpus: 1
+        mem: 128
+        disk: 0
+        instances: 1
+        container:
+          type: DOCKER
+          docker:
+            image: "forestscribe/zk-http-bridge"
+            network: BRIDGE
+            privileged: false
+            parameters: []
+            forcePullImage: true
+            portMappings:
+            - containerPort: 8080
+              protocol: tcp
+              servicePort: "{{ servicePorts.zk_http }}"
+        labels:
+          subdomain: '/zkhttp/'
+          upstream_name: 'zkhttp'
+          HAPROXY_GROUP: external
+          HAPROXY_BIND_ADDR: 172.17.0.1
+        env:
+            ZK_HOST: "{{ zk_host }}"
+
+        healthChecks:
+        - "{{ basic_http_health_check }}"

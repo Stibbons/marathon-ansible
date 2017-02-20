@@ -3,7 +3,9 @@ ansible playbook and tools to run Forestscribe infra in marathon
 
     export ZK_HOST=<zk_host>:<zk_port>
     pipenv --two
-    pipenv run ansible-playbook local.yml
+    pipenv run ansible-playbook marthon/core.yml
+    pipenv run ansible-playbook marthon/ci.yml
+    pipenv run ansible-playbook marthon/sota.yml
 
 
 To populate zk with the ansible vault (only need to be done once, or when new infra configuration is to be done):

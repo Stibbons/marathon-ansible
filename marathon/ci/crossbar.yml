@@ -1,33 +1,27 @@
-- name: Deploy zk_http on marathon
+---
+- name: Deploy Crossbar
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    app_id: zkhttp
-    wait_quiet: 'true'
+    marathon_group: "{{ marathon_group }}"
+    app_id: crossbar
     app_json:
-        id: zkhttp
         cpus: 1
-        mem: 128
+        mem: 1024
         disk: 0
         instances: 1
         container:
           type: DOCKER
+          volumes: []
           docker:
-            image: "forestscribe/zk-http-bridge"
+            image: crossbario/crossbar
             network: BRIDGE
             privileged: false
             parameters: []
-            forcePullImage: true
+            forcePullImage: false
             portMappings:
             - containerPort: 8080
               protocol: tcp
-              servicePort: "{{ servicePorts.zk_http }}"
+              servicePort: "{{ servicePorts['crossbar'] }}"
         labels:
-          subdomain: '/zkhttp/'
-          upstream_name: 'zkhttp'
           HAPROXY_GROUP: external
           HAPROXY_BIND_ADDR: 172.17.0.1
-        env:
-            ZK_HOST: "{{ zk_host }}"
-
-        healthChecks:
-        - "{{ basic_http_health_check }}"
