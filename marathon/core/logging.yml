@@ -84,7 +84,7 @@
                     labels:
                       HAPROXY_GROUP: external
                       HAPROXY_BIND_ADDR: 172.17.0.1
-                      subdomain: '/kibana/'
+                      subdomain: 'kibana'
                       upstream_name: 'kibana'
 
                     env:
@@ -103,14 +103,7 @@
                       type: DOCKER
                       docker:
                         image: logstash:5
-                        network: BRIDGE
-                        portMappings:
-                        - containerPort: 4000
-                          servicePort: "{{ servicePorts.logstash }}"
-                          protocol: tcp
-                        - containerPort: 4001
-                          servicePort: "{{ servicePorts.syslog }}"
-                          protocol: tcp
+                        network: HOST
                     args: ["-f", "/mnt/mesos/sandbox/logstash.conf"]
                     uris:
                         - "{{ logstash_conf_url }}"

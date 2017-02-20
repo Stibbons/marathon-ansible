@@ -1,0 +1,35 @@
+- name: Deploy ci backends
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: ci/backend
+    group_json:
+        dependencies:
+            - /core/lb
+            - /core/logging
+        apps:
+        -   id: crossbar
+            cpus: 1
+            mem: 1024
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: crossbario/crossbar
+                network: BRIDGE
+                privileged: false
+                forcePullImage: false
+                portMappings:
+                - containerPort: 8080
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.crossbar }}"
+                parameters:
+                    - key: log-driver
+                      value: syslog
+                    - key: log-opt
+                      value: "syslog-address=tcp://localhost:{{ servicePorts.syslog }}"
+
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1

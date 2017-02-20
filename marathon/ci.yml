@@ -3,8 +3,4 @@
   connection: local
   tasks:
     # order is important (until we implement marathon groups)
-    - include: "ci/crossbar.yml"
-    - include: "ci/pg.yml"
-    - include: "ci/buildbot.yml"
-    - include: "ci/artifactory.yml"
-    - include: "ci/ngrok.yml"
+    - include: "ci/backends.yml"
