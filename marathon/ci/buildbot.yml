@@ -47,8 +47,8 @@
                 GITHUB_TOKEN: "{{ github_status_token }}"
                 BUILDMASTER_LB_HOST: "{{ docker_ip }}"
                 BUILDMASTER_LB_PORT: "{{ servicePorts.buildbot_worker }}"
-                ART_OUTPUT_URL: "http://admin:admin@{{ docker_ip }}:{{servicePorts.artifactory}}/artifactory/"
-                ART_URL: "{{ nginx_external_url}}/artifactory/"
+                ART_OUTPUT_URL: "http://admin:admin@{{ docker_ip }}:{{servicePorts.artifactory}}/artifactory"
+                ART_URL: "{{ nginx_external_url}}/artifactory"
             labels:
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
