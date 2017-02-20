@@ -1,91 +1,118 @@
----
 - name: Deploy buildbot
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    marathon_group: "{{ marathon_group }}"
-    app_id: buildbot
-    wait_quiet: 'true'
-    app_json:
-        id: buildbot
-        cpus: 5
-        mem: 14024
-        disk: 0
-        instances: 1
-        container:
-          type: DOCKER
-          volumes: []
-          docker:
-            image: forestscribe/buildbot-config
-            network: BRIDGE
-            privileged: false
-            parameters: []
-            forcePullImage: false
-            portMappings:
-            - containerPort: 8080
-              protocol: tcp
-              servicePort: "{{ servicePorts['buildbot_www'] }}"
-            - containerPort: 9989
-              protocol: tcp
-              servicePort: "{{ servicePorts['buildbot_worker'] }}"
-        env:
-            BUILDBOT_CONFIG_DIR: config
-            BUILDBOT_CONFIG_URL: https://github.com/forestscribe/buildbot-config/archive/master.tar.gz
-            BUILDBOT_WORKER_PORT: '9989'
-            BUILDBOT_WEB_URL: "{{ nginx_external_url }}/buildbot/"
-            BUILDBOT_WEB_PORT: '8080'
-            BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts['postgres']}}/{{POSTGRES_DB}}
-            # BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts['crossbar']}}
-            # BUILDBOT_MQ_REALM: realm1
-            https_proxy: "{{zk.proxy_env.https_proxy}}"
-            http_proxy: "{{zk.proxy_env.http_proxy}}"
-            no_proxy: "{{zk.proxy_env.no_proxy}}"
-            ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
-            MARATHON_URL: "{{ marathon_uri }}"
-            GITHUB_TOKEN: "{{ github_status_token }}"
-            BUILDMASTER_LB_HOST: "{{ docker_ip }}"
-            BUILDMASTER_LB_PORT: "{{ servicePorts['buildbot_worker'] }}"
-            ART_OUTPUT_URL: "http://admin:admin@{{ nginx_external_url | host_from_url }}/artifactory/"
-        labels:
-          HAPROXY_GROUP: external
-          HAPROXY_BIND_ADDR: 172.17.0.1
-          subdomain: '/buildbot/'
-          upstream_name: 'buildbot'
-
-        healthChecks:
+    group_id: ci/buildbot
+    group_json:
+        dependencies:
+            - /core/lb
+            - /core/logging
+            - /ci/backend
+        apps:
         -
-          path: /
-          protocol: HTTP
-          portIndex: 0
-          gracePeriodSeconds: 300
-          intervalSeconds: 60
-          timeoutSeconds: 20
-          maxConsecutiveFailures: 3
-          ignoreHttp1xx: false
+            id: buildbot
+            cpus: 5
+            mem: 14024
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: forestscribe/buildbot-config
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: false
+                portMappings:
+                - containerPort: 8080
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.buildbot_www }}"
+                - containerPort: 9989
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.buildbot_worker }}"
+            env:
+                BUILDBOT_CONFIG_DIR: config
+                BUILDBOT_CONFIG_URL: https://github.com/forestscribe/buildbot-config/archive/master.tar.gz
+                BUILDBOT_WORKER_PORT: '9989'
+                BUILDBOT_WEB_URL: "http://buildbot.{{ nginx_external_url | host_from_url }}/"
+                BUILDBOT_WEB_PORT: '8080'
+                BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts['postgres']}}/{{POSTGRES_DB}}
+                BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts.crossbar}}/ws
+                BUILDBOT_MQ_REALM: realm1
+                https_proxy: "{{zk.proxy_env.https_proxy}}"
+                http_proxy: "{{zk.proxy_env.http_proxy}}"
+                no_proxy: "{{zk.proxy_env.no_proxy}}"
+                ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
+                MARATHON_URL: "{{ marathon_uri }}"
+                GITHUB_TOKEN: "{{ github_status_token }}"
+                BUILDMASTER_LB_HOST: "{{ docker_ip }}"
+                BUILDMASTER_LB_PORT: "{{ servicePorts.buildbot_worker }}"
+                ART_OUTPUT_URL: "http://admin:admin@{{ docker_ip }}:{{servicePorts.artifactory}}/artifactory/"
+                ART_URL: "{{ nginx_external_url}}/artifactory/"
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
+              subdomain: 'buildbot'
+              upstream_name: 'buildbot'
 
-- name: Deploy nginx forwarder for buildbot hooks
-  marathon:
-    marathon_uri: "{{ marathon_uri }}"
-    app_id: nginxbbhooks
-    app_json:
-        id: nginxbbhooks
-        cpus: .1
-        mem: 256
-        disk: 0
-        instances: 1
-        container:
-          type: DOCKER
-          volumes: []
-          docker:
-            image: forestscribe/nginx-simple-proxy
-            network: BRIDGE
-            portMappings:
-            - containerPort: 80
-              protocol: tcp
-              servicePort: "{{ servicePorts['buildbot_hooks'] }}"
-        env:
-            NGINX_PORT: "80"
-            SERVERNAME: buildbot_hooks
-            PROXY_PASS: "{{ nginx_external_url }}/buildbot/change_hook/github/"
-        labels:
-          HAPROXY_GROUP: external
-          HAPROXY_BIND_ADDR: 172.17.0.1
+            healthChecks:
+            - "{{ basic_http_health_check }}"
+
+        -   id: nginxbbhooks
+            cpus: .1
+            mem: 256
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: forestscribe/nginx-simple-proxy
+                network: BRIDGE
+                parameters: "{{ docker_log_driver_parameters }}"
+                portMappings:
+                - containerPort: 80
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.buildbot_hooks }}"
+            env:
+                NGINX_PORT: "80"
+                SERVERNAME: buildbot_hooks
+                PROXY_PASS: "http://buildbot.{{ nginx_external_url | host_from_url }}/change_hook/github/"
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
+
+        -   id: ngrok
+            cmd: ngrok http {{ docker_ip }}:{{ servicePorts['buildbot_hooks'] }}
+            cpus: 0.5
+            mem: 64
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              docker:
+                image:  "forestscribe/docker-ngrok"
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: false
+                portMappings:
+                  - containerPort: 4040
+                    protocol: tcp
+                    servicePort: "{{ servicePorts['ngrok'] }}"
+            env:
+                http_proxy: "{{zk.proxy_env.http_proxy}}"
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
+
+            healthChecks:
+            -
+              path: /api/tunnels
+              protocol: HTTP
+              portIndex: 0
+              gracePeriodSeconds: 300
+              intervalSeconds: 60
+              timeoutSeconds: 20
+              maxConsecutiveFailures: 3
+              ignoreHttp1xx: false

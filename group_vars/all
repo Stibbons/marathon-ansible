@@ -85,3 +85,11 @@ basic_tcp_health_check:
     intervalSeconds: 60
     timeoutSeconds: 20
     maxConsecutiveFailures: 3
+
+docker_log_driver_parameters:
+    - key: log-driver
+      value: syslog
+    - key: log-opt
+      value: "syslog-address=tcp://localhost:{{ servicePorts.syslog }}"
+    - key: log-opt
+      value: "tag={% raw %}{{.ImageName}}/{{.Name}}/{{.ID}}{% endraw %}"

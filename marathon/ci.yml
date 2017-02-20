@@ -4,3 +4,5 @@
   tasks:
     # order is important (until we implement marathon groups)
     - include: "ci/backends.yml"
+    - include: "ci/artifactory.yml"
+    - include: "ci/buildbot.yml"
