@@ -1,0 +1,98 @@
+- name: upload nixy.toml conf in zk
+  znode:
+    hosts: "{{ zk_host }}"
+    name: "/etc/nixy/nixy.toml"
+    value: "{{ lookup('template', 'core/nixy/nixy.toml') }}"
+    state: present
+
+- name: upload nginx.tmpl conf in zk
+  znode:
+    hosts: "{{ zk_host }}"
+    name: "/etc/nixy/nginx.tmpl"
+    value: "{{ lookup('file', 'core/nixy/nginx.tmpl') }}"
+    state: present
+
+- name: Deploy corelb
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: core/lb
+    group_json:
+        apps:
+        -   id: marathonlb
+            cmd:
+            args: [ sse, --marathon, "{{ marathon_uri }}", --group, external, --dont-bind-http-https ]
+            cpus: .5
+            mem: 128
+            disk: 0
+            instances: "{{marathon_num_agents}}"
+            constraints:
+            - [ "hostname", "UNIQUE" ]
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: mesosphere/marathon-lb
+                network: HOST
+                privileged: false
+                parameters: []
+                forcePullImage: false
+            upgradeStrategy:
+                minimumHealthCapacity: 0.5
+                maximumOverCapacity: 0
+
+        -   id: zkhttp
+            cpus: .2
+            mem: 128
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              docker:
+                image: "forestscribe/zk-http-bridge"
+                network: BRIDGE
+                privileged: false
+                parameters: []
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8080
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.zk_http }}"
+            labels:
+              subdomain: '/zkhttp/'
+              upstream_name: 'zkhttp'
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
+            env:
+                ZK_HOST: "{{ zk_host }}"
+
+            healthChecks:
+            - "{{ basic_http_health_check }}"
+
+        -   id: nixy
+            cpus: .5
+            mem: 256
+            disk: 0
+            instances: "{{ marathon_num_agents }}"
+            container:
+              type: DOCKER
+              docker:
+                image: "forestscribe/docker-nixy"
+                network: BRIDGE
+                privileged: false
+                parameters: []
+                forcePullImage: true
+                portMappings:
+                - containerPort: 7000
+                  hostPort: 80
+                  protocol: tcp
+            env:
+                MARATHON_LIST: "\"[\"{{ marathon_uri }}\"]\""
+
+            uris:
+                - "{{ zk_http_url }}/etc/nixy/nixy.toml"
+                - "{{ zk_http_url }}/etc/nixy/nginx.tmpl"
+
+            healthChecks:
+            - "{{ basic_http_health_check }}"
+            upgradeStrategy:
+                minimumHealthCapacity: 0.2

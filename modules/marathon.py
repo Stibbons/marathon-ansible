@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# (c) 2015, James Earl Douglas <james@earldouglas.com>
+# (c) 2015, James Earl Douglas < @earldouglas.com>
 #
 # This file is part of Ansible.
 #
@@ -28,9 +28,9 @@ from ansible.module_utils.urls import fetch_url
 
 DOCUMENTATION = """
 module: marathon
-short_description: Deploy applications to Marathon
+short_description: Deploy application groups to Marathon
 description:
-  - Deploy applications to Marathon
+  - Deploy application groups to Marathon
 
 options:
   marathon_uri:
@@ -38,17 +38,16 @@ options:
     description:
       - Base URI of the Marathon master
 
-  app_id:
+  group_id:
     required: true
     description:
-      - The Marathon appId, used via <marathon>/v2/apps/:app_id
+      - The Marathon groupId, used via <marathon>/v2/groups/:group_id
 
-  app_json:
+  group_json:
     required: true
     description:
-      - The Marathon app descriptor (app.json)
+      - The Marathon group descriptor (group.json)
 
-author: "James Earl Douglas (james@earldouglas.com)"
 """
 
 EXAMPLES = """
@@ -56,8 +55,10 @@ EXAMPLES = """
 - name: Deploy to Marathon
   marathon:
     marathon_uri: https://example.com:8080/
-    app_id: myApp
-    app_json: "{{ lookup('file', '/path/to/app.json') }}"
+    group_id: myApp
+    group_json:
+        apps:
+        - "{{ lookup('file', '/path/to/app.json') }}"
 """
 
 
@@ -85,11 +86,11 @@ def request(url, method, data, accepted_responses=(200, 201, 204)):
         else:
             return {}
 
-    except Exception, e:
+    except Exception as e:
         msg = {
             "description": "could not {} to Marathon".format(method),
             "marathon_uri": repr(url),
-            "app_json": repr(data),
+            "group_json": repr(data),
             "exception": repr(e)
         }
         return module.fail_json(msg=dumps(msg))
@@ -132,29 +133,24 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             marathon_uri=dict(required=True),
-            wait_quiet=dict(default='false', type="bool"),
-            app_id=dict(required=True),
-            app_json=dict(required=True, type="dict"),
+            group_id=dict(required=True),
+            group_json=dict(required=True, type="dict"),
         ),
     )
 
     marathon_uri = module.params['marathon_uri']
-    app_id = module.params['app_id']
-    wait_quiet = module.params['wait_quiet']
-    app_json = module.params['app_json']
-    if not isinstance(app_json, dict):
-        return module.fail_json(msg="app_json should be a dict: {}".format(app_json))
-    app_json = dumps(enforceInts(app_json))
+    group_id = module.params['group_id']
+    group_json = module.params['group_json']
+    if not isinstance(group_json, dict):
+        return module.fail_json(msg="group_json should be a dict: {}".format(group_json))
+    group_json = dumps(enforceInts(group_json))
 
     if not marathon_uri.endswith('/'):
         marathon_uri = marathon_uri + '/'
 
-    if wait_quiet:
-        waitQuiet(marathon_uri)
-
-    marathon_uri = marathon_uri + 'v2/apps/' + app_id
+    marathon_uri = marathon_uri + 'v2/groups/' + group_id
     versions_before = get(marathon_uri + "/versions", accepted_responses=(200, 404))
-    ret = put(marathon_uri + '?force=true', app_json)
+    ret = put(marathon_uri + '?force=true', group_json)
     versions_after = get(marathon_uri + "/versions", accepted_responses=(200, 404))
     if versions_before != versions_after:
         module.exit_json(changed=True, meta=ret)
