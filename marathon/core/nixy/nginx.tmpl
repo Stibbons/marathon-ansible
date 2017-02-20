@@ -70,10 +70,10 @@ http {
         {{- end}}
         {{- end}}
     }
-        {{- range $id, $app := .Apps}}
-        {{- if $app.Labels.upstream_name }}
-        {{- range $app.Hosts}}
-        {{- if ne '/' (index . 0) }}
+    {{- range $id, $app := .Apps}}
+    {{- if $app.Labels.upstream_name }}
+    {{- range $app.Hosts}}
+    {{- if ne '/' (index . 0) }}
 
     server {
         listen 7000;
@@ -99,10 +99,10 @@ http {
             {{- end }}
             proxy_pass http://{{$app.Labels.upstream_name}}/;
         }
-        {{- end }}
-        {{- end }}
-        {{- end}}
-        {{- end}}
     }
+    {{- end }}
+    {{- end }}
+    {{- end}}
+    {{- end}}
 
 }
