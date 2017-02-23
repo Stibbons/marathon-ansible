@@ -88,10 +88,10 @@ basic_tcp_health_check:
 
 docker_log_driver_parameters:
     - key: log-driver
-      value: syslog
+      value: gelf
     - key: log-opt
-      value: "syslog-address=tcp://localhost:{{ servicePorts.syslog }}"
+      value: "gelf-address=udp://localhost:{{ servicePorts.logstash }}"
     - key: log-opt
-      value: "labels={% raw %}{{.ImageName}},{{ (.ExtraAttributes nil).MARATHON_APP_ID }},{{ (.ExtraAttributes nil).MARATHON_TASK_ID }},{{ (.ExtraAttributes nil).HOST }}{% endraw %}"
+      value: "labels={% raw %}{{.ImageName}},{{ (.ExtraAttributes nil).MARATHON_APP_ID }},{{ (.ExtraAttributes nil).MESOS_TASK_ID }},{{ (.ExtraAttributes nil).HOST }},{{ (.ExtraAttributes nil).MARATHON_APP_VERSION }},{{ (.ExtraAttributes nil).MARATHON_APP_DOCKER_IMAGE }}{% endraw %}"
     - key: log-opt
-      value: "env=MARATHON_APP_ID,MARATHON_TASK_ID,HOST"
+      value: "env=MARATHON_APP_ID,MESOS_TASK_ID,HOST,MARATHON_APP_VERSION,MARATHON_APP_DOCKER_IMAGE"

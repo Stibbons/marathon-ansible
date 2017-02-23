@@ -1,6 +1,8 @@
 - vars:
     logstash_conf_path: "/etc/logstash/logstash.conf"
     logstash_conf_url: "{{ zk_http_url }}/{{ logstash_conf_path }}"
+    logtrail_conf_path: "/etc/logtrail/logtrail.json"
+    logtrail_conf_url: "{{ zk_http_url }}/{{ logtrail_conf_path }}"
 
   block:
     - name: upload logstash conf in zk
@@ -8,6 +10,13 @@
         hosts: "{{ zk_host }}"
         name: "{{ logstash_conf_path }}"
         value: "{{ lookup('template', 'logstash/logstash.conf') }}"
+        state: present
+
+    - name: upload logtrail conf in zk
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "{{ logtrail_conf_path }}"
+        value: "{{ lookup('file', 'kibana/logtrail.json') | from_json | to_json }}"
         state: present
 
     - name: Deploy logging
@@ -48,7 +57,7 @@
 
                     labels:
                       HAPROXY_GROUP: external
-                      HAPROXY_BIND_ADDR: 172.17.0.1
+                      HAPROXY_BIND_ADDR: 0.0.0.0
                       subdomain: '/elasticsearch/'
                       upstream_name: 'elasticsearch'
 
@@ -70,8 +79,13 @@
                     instances: 1
                     container:
                       type: DOCKER
+                      volumes:
+                      - containerPath: "/config"
+                        hostPath: "."
+                        mode: "RW"
                       docker:
-                        image:  "kibana:5"
+#                        image:  "kibana:5"
+                        image:  "linkyard/kibana-logtrail:5.2.0-1"
                         network: BRIDGE
                         privileged: false
                         parameters: []
@@ -92,25 +106,27 @@
                         ELASTICSEARCH_URL: "http://{{docker_ip}}:{{ servicePorts.elasticsearch }}"
                     healthChecks:
                     - "{{ basic_http_health_check }}"
+                    uris:
+                        - "{{ logtrail_conf_url }}"
 
                 -   id: "logstash"
                     cpus: 1
                     mem: 1024
-                    instances: "2"
+                    instances: "{{ marathon_num_agents }}"
                     constraints:
                     - [ "hostname", "UNIQUE" ]
                     container:
                       type: DOCKER
                       docker:
                         image: logstash:5
-                        network: BRIDGE
-                        portMappings:
-                        - containerPort:  "{{ servicePorts.syslog }}"
-                          servicePort: "{{ servicePorts.syslog }}"
-                          protocol: tcp
-                        - containerPort:  "{{ servicePorts.logstash }}"
-                          servicePort: "{{ servicePorts.logstash }}"
-                          protocol: tcp
+                        network: HOST
+                        # portMappings:
+                        # - containerPort:  "{{ servicePorts.syslog }}"
+                        #   servicePort: "{{ servicePorts.syslog }}"
+                        #   protocol: tcp
+                        # - containerPort:  "{{ servicePorts.logstash }}"
+                        #   servicePort: "{{ servicePorts.logstash }}"
+                        #   protocol: udp
                     args: ["-f", "/mnt/mesos/sandbox/logstash.conf"]
                     uris:
                         - "{{ logstash_conf_url }}"
