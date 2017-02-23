@@ -37,8 +37,8 @@
                 BUILDBOT_WEB_URL: "http://buildbot.{{ nginx_external_url | host_from_url }}/"
                 BUILDBOT_WEB_PORT: '8080'
                 BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts['postgres']}}/{{POSTGRES_DB}}
-                BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts.crossbar}}/ws
-                BUILDBOT_MQ_REALM: realm1
+                #BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts.crossbar}}/ws
+                #BUILDBOT_MQ_REALM: realm1
                 https_proxy: "{{zk.proxy_env.https_proxy}}"
                 http_proxy: "{{zk.proxy_env.http_proxy}}"
                 no_proxy: "{{zk.proxy_env.no_proxy}}"
@@ -51,7 +51,7 @@
                 ART_URL: "{{ nginx_external_url}}/artifactory"
             labels:
               HAPROXY_GROUP: external
-              HAPROXY_BIND_ADDR: 172.17.0.1
+              HAPROXY_BIND_ADDR: "172.17.0.1"
               subdomain: 'buildbot'
               upstream_name: 'buildbot'
 

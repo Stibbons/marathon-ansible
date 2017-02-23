@@ -8,9 +8,11 @@ def proxies_from_env(ret):
             ret[env] = os.environ[env]
     return ret
 
+
 def host_from_url(ret):
     parsed = urlparse.urlparse(ret)
     return parsed.netloc.split(":")[0]
+
 
 class FilterModule(object):
     """

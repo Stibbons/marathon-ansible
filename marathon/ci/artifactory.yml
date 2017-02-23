@@ -9,7 +9,7 @@
         apps:
         -   id: artifactory
             cpus: 1
-            mem: 2024
+            mem: 4096
             disk: 0
             instances: 1
             container:
@@ -31,7 +31,6 @@
                 forcePullImage: true
                 portMappings:
                 - containerPort: 8081
-                  hostPort: 28081
                   protocol: tcp
                   servicePort: "{{ servicePorts.artifactory }}"
             healthChecks:
@@ -44,3 +43,5 @@
             labels:
               subdomain: '/'
               upstream_name: 'artifactory'
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1

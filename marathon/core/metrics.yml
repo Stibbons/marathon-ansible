@@ -17,6 +17,7 @@
         group_json:
             dependencies:
                 - /core/lb
+                - /core/logging
             apps:
             -   id: collectd
                 cmd:
@@ -33,17 +34,15 @@
                     hostPath: "/var/run/docker.sock"
                     mode: RW
                   docker:
-                    image:  "bobrik/collectd-docker"
+                    image:  "forestscribe/influxdb-docker-collect"
                     network: BRIDGE
                     privileged: true
-                    parameters: []
-                    forcePullImage: false
+                    parameters: "{{ docker_log_driver_parameters }}"
+                    forcePullImage: true
                 env:
-                    GRAPHITE_HOST: "{{ docker_ip }}"
-                    GRAPHITE_PORT: "{{ servicePorts['graphite'] }}"
-                    APP_ENV_KEY: MARATHON_APP_ID
-                    TASK_ENV_KEY: MESOS_TASK_ID
-                    COLLECTD_HOST: MESOS
+                    INFLUXDB_URL: http://{{docker_ip}}:{{servicePorts.influxdb}}
+                    INFLUXDB_DATABASE: mesos_docker
+
                 upgradeStrategy:
                     minimumHealthCapacity: 0.5
                     maximumOverCapacity: 0

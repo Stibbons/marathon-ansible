@@ -96,14 +96,21 @@
                 -   id: "logstash"
                     cpus: 1
                     mem: 1024
-                    instances: "{{marathon_num_agents}}"
+                    instances: "2"
                     constraints:
                     - [ "hostname", "UNIQUE" ]
                     container:
                       type: DOCKER
                       docker:
                         image: logstash:5
-                        network: HOST
+                        network: BRIDGE
+                        portMappings:
+                        - containerPort:  "{{ servicePorts.syslog }}"
+                          servicePort: "{{ servicePorts.syslog }}"
+                          protocol: tcp
+                        - containerPort:  "{{ servicePorts.logstash }}"
+                          servicePort: "{{ servicePorts.logstash }}"
+                          protocol: tcp
                     args: ["-f", "/mnt/mesos/sandbox/logstash.conf"]
                     uris:
                         - "{{ logstash_conf_url }}"
