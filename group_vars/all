@@ -46,6 +46,16 @@ servicePorts:
     sota_ldap:            30105
     sota_webserver:       30106
 
+    st_buildbot_www:     30130
+    st_buildbot_worker:  30131
+
+    st_postgres:         30140
+
+    st_crossbar:         30150
+
+    st_artifactory:      30170
+
+
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zookeeper_host }}"
@@ -57,7 +67,12 @@ marathon_num_agents: "{{ zk.cloud.mesos_num_agents}}"
 # config files can be downloaded via marathon_uri using this service (see influxdb for an example)
 zk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
 
+
 marathon_uri: "{{ zk.cloud.marathon_uri }}"
+
+# nixy needs zkhttp provided configuration files, so we need a zkhttp discovered
+zk_http_discovered_url: "{{marathon_uri | zk_http_discover}}"
+
 nginx_external_url: "{{ zk.cloud.nginx_external_url }}"
 github_status_token:  "{{ zk.secrets.github_status_token }}"
 

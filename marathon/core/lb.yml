@@ -18,28 +18,6 @@
     group_id: core/lb
     group_json:
         apps:
-        -   id: marathonlb
-            cmd:
-            args: [ sse, --marathon, "{{ marathon_uri }}", --group, external, --dont-bind-http-https ]
-            cpus: .5
-            mem: 128
-            disk: 0
-            instances: "{{marathon_num_agents}}"
-            constraints:
-            - [ "hostname", "UNIQUE" ]
-            container:
-              type: DOCKER
-              volumes: []
-              docker:
-                image: mesosphere/marathon-lb
-                network: HOST
-                privileged: false
-                parameters: []
-                forcePullImage: false
-            upgradeStrategy:
-                minimumHealthCapacity: 0.5
-                maximumOverCapacity: 0
-
         -   id: zkhttp
             cpus: .2
             mem: 128
@@ -73,26 +51,24 @@
             mem: 256
             disk: 0
             instances: "{{ marathon_num_agents }}"
+            constraints:
+            - [ "hostname", "UNIQUE" ]
             container:
               type: DOCKER
               docker:
                 image: "forestscribe/docker-nixy"
-                network: BRIDGE
-                privileged: false
+                network: HOST
+                privileged: true
                 parameters: []
                 forcePullImage: true
-                portMappings:
-                - containerPort: 7000
-                  hostPort: 80
-                  protocol: tcp
             env:
-                MARATHON_LIST: "\"[\"{{ marathon_uri }}\"]\""
+                MARATHON_LIST: "  [\"{{ marathon_uri }}\"]"
 
             uris:
-                - "{{ zk_http_url }}/etc/nixy/nixy.toml"
-                - "{{ zk_http_url }}/etc/nixy/nginx.tmpl"
+                - "{{ zk_http_discovered_url }}/etc/nixy/nixy.toml"
+                - "{{ zk_http_discovered_url }}/etc/nixy/nginx.tmpl"
+                - "{{ zk_http_discovered_url }}/certs/forestscribe.crt"
+                - "{{ zk_http_discovered_url }}/certs/forestscribe.key"
 
-            healthChecks:
-            - "{{ basic_http_health_check }}"
             upgradeStrategy:
                 minimumHealthCapacity: 0.2

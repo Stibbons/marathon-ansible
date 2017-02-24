@@ -8,5 +8,4 @@ pass = ""
 # nginx
 nginx_config = "/mnt/mesos/sandbox/nginx.conf"
 nginx_template = "/mnt/mesos/sandbox/nginx.tmpl"
-
 nginx_cmd = "nginx" # optionally openresty

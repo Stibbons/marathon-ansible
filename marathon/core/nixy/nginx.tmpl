@@ -7,7 +7,28 @@ events {
     worker_connections 2048;
     multi_accept on;
 }
+stream {
+    {{- range $appid, $app := .Apps}}
+    {{- range $id, $definition := $app.PortDefinitions}}
+    upstream {{urlquery $appid}}-{{ $id }} {
+        {{- range $task := $app.Tasks}}
+        server {{ $task.Host }}:{{ index $task.Ports $id }};
+        {{- end}}
+    }
+    server {
+        {{- if eq $definition.Protocol "tcp" }}
+        listen {{ $definition.Port}};
+        {{- else }}
+        listen {{ $definition.Port}} {{ $definition.Protocol }};
+        {{- end}}
+        proxy_pass {{urlquery $appid}}-{{ $id }};
+    }
+    {{- end}}
+    {{- end}}
+}
+
 http {
+    server_names_hash_bucket_size 128;
     add_header X-Proxy {{ .Xproxy }} always;
     access_log off;
     error_log /var/log/nginx/error.log warn;
@@ -28,17 +49,33 @@ http {
     keepalive_timeout 10;
 
     {{- range $id, $app := .Apps}}
-    {{- if $app.Labels.upstream_name }}
-    upstream {{ $app.Labels.upstream_name }} {
+    {{- if $app.Labels.subdomain }}
+    {{- range $i, $port :=.PortDefinitions}}
+    upstream {{ urlquery $id }}-{{$i}} {
         {{- range $app.Tasks}}
-        server {{ .Host }}:{{ index .Ports 0 }};
+        server {{ .Host }}:{{ index .Ports $i }};
         {{- end}}
     }
     {{- end }}
-    {{- end}}
+    {{- end }}
+    {{- end }}
 
     server {
-        listen 7000;
+    	listen 80 default_server;
+    	listen [::]:80 default_server;
+    	server_name _;
+    	return 301 https://$host$request_uri;
+    }
+    server {
+        listen 443 ssl http2 default_server;
+        ssl on;
+        ssl_certificate /mnt/mesos/sandbox/forestscribe.crt;
+        ssl_certificate_key /mnt/mesos/sandbox/forestscribe.key;
+
+        # put a one day session timeout for websockets to stay longer
+        ssl_session_cache      shared:SSL:1440m;
+        ssl_session_timeout  1440m;
+
         server_name forestscribe forestscribe.intel.com;
         proxy_set_header HOST $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -52,7 +89,7 @@ http {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
         {{- range $id, $app := .Apps}}
-        {{- if $app.Labels.upstream_name }}
+        {{- if $app.Labels.subdomain }}
         {{- range $app.Hosts}}
         {{- if eq '/' (index . 0) }}
         location {{.}} {
@@ -63,20 +100,28 @@ http {
                 proxy_read_timeout 600s;
                 proxy_send_timeout 600s;
             {{- end }}
-            proxy_pass http://{{$app.Labels.upstream_name}}/;
+            proxy_pass http://{{urlquery $id}}-0/;
         }
         {{- end }}
-        {{- end }}
+        {{- end}}
         {{- end}}
         {{- end}}
     }
     {{- range $id, $app := .Apps}}
-    {{- if $app.Labels.upstream_name }}
+    {{- if $app.Labels.subdomain }}
     {{- range $app.Hosts}}
     {{- if ne '/' (index . 0) }}
 
     server {
-        listen 7000;
+        listen 443 ssl http2;
+        ssl on;
+        ssl_certificate /mnt/mesos/sandbox/forestscribe.crt;
+        ssl_certificate_key /mnt/mesos/sandbox/forestscribe.key;
+
+        # put a one day session timeout for websockets to stay longer
+        ssl_session_cache      shared:SSL:1440m;
+        ssl_session_timeout  1440m;
+
         server_name {{.}} {{.}}.intel.com {{.}}.forestscribe.intel.com;
         proxy_set_header HOST $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -97,7 +142,7 @@ http {
                 proxy_read_timeout 600s;
                 proxy_send_timeout 600s;
             {{- end }}
-            proxy_pass http://{{$app.Labels.upstream_name}}/;
+            proxy_pass http://{{urlquery $id}}-0/;
         }
     }
     {{- end }}
