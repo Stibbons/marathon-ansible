@@ -139,6 +139,8 @@
                 labels:
                   HAPROXY_GROUP: external
                   HAPROXY_BIND_ADDR: 172.17.0.1
+                  subdomain: '/influxdb/'
+                  upstream_name: 'influxdb'
 
                 uris:
                     - "{{ influxdb_conf_url }}"

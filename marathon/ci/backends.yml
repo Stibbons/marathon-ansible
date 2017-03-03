@@ -25,7 +25,8 @@
                   protocol: tcp
                   servicePort: "{{ servicePorts.crossbar }}"
                 parameters: "{{ docker_log_driver_parameters }}"
-
+            healthChecks:
+            - "{{ basic_http_health_check }}"
             labels:
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
@@ -66,3 +67,5 @@
                 POSTGRES_USER: "{{POSTGRES_USER}}"
                 POSTGRES_DB: "{{POSTGRES_DB}}"
                 PGDATA: "/mnt/mesos/sandbox/pgdata"
+            healthChecks:
+            - "{{ basic_tcp_health_check }}"

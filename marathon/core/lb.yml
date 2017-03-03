@@ -18,6 +18,28 @@
     group_id: core/lb
     group_json:
         apps:
+        -   id: marathonlb
+            cmd:
+            args: [ sse, --marathon, "{{ marathon_uri }}", --group, external, --dont-bind-http-https ]
+            cpus: .5
+            mem: 256
+            disk: 0
+            instances: "{{marathon_num_agents}}"
+            constraints:
+            - [ "hostname", "UNIQUE" ]
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: mesosphere/marathon-lb
+                network: HOST
+                privileged: false
+                parameters: []
+                forcePullImage: false
+            upgradeStrategy:
+                minimumHealthCapacity: 0.5
+                maximumOverCapacity: 0
+
         -   id: zkhttp
             cpus: .2
             mem: 128
@@ -48,7 +70,7 @@
 
         -   id: nixy
             cpus: .5
-            mem: 256
+            mem: 512
             disk: 0
             instances: "{{ marathon_num_agents }}"
             constraints:
@@ -59,7 +81,7 @@
                 image: "forestscribe/docker-nixy"
                 network: HOST
                 privileged: true
-                parameters: []
+                parameters: "{{ docker_log_driver_parameters }}"
                 forcePullImage: true
             env:
                 MARATHON_LIST: "  [\"{{ marathon_uri }}\"]"
@@ -72,3 +94,4 @@
 
             upgradeStrategy:
                 minimumHealthCapacity: 0.2
+            portDefinitions: [] # dont put port definition or it will try to load balance it!

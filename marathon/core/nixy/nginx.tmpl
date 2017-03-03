@@ -15,14 +15,17 @@ stream {
         server {{ $task.Host }}:{{ index $task.Ports $id }};
         {{- end}}
     }
+    {{- if eq $definition.Protocol "tcp" }}
+    #server {
+        #listen {{ $definition.Port}};
+        #proxy_pass {{urlquery $appid}}-{{ $id }};
+    #}
+    {{- else }}
     server {
-        {{- if eq $definition.Protocol "tcp" }}
-        listen {{ $definition.Port}};
-        {{- else }}
         listen {{ $definition.Port}} {{ $definition.Protocol }};
-        {{- end}}
         proxy_pass {{urlquery $appid}}-{{ $id }};
     }
+    {{- end}}
     {{- end}}
     {{- end}}
 }
@@ -106,6 +109,10 @@ http {
         {{- end}}
         {{- end}}
         {{- end}}
+        location /health {
+            stub_status on;
+            access_log off;
+        }
     }
     {{- range $id, $app := .Apps}}
     {{- if $app.Labels.subdomain }}

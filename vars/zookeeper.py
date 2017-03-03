@@ -44,7 +44,10 @@ class ZkConfAccessor(unsafe_proxy.AnsibleUnsafe):
             self.zk = zk
             self.basepath = basepath
 
-        self._attributes = self.zk.get_children(self.basepath)
+        try:
+           self._attributes = self.zk.get_children(self.basepath)
+        except:
+           self._attributes = None
         self.zk.stop()
 
     def __getattr__(self, name):

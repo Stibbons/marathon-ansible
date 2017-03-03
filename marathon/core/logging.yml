@@ -130,3 +130,8 @@
                     upgradeStrategy:
                         minimumHealthCapacity: 0.5
                         maximumOverCapacity: 0
+                    portDefinitions:
+                    -   port: "{{ servicePorts.syslog }}"
+                        protocol: "tcp"
+                    -   port: "{{ servicePorts.logstash }}"
+                        protocol: "udp"
