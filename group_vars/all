@@ -56,6 +56,12 @@ servicePorts:
     st_artifactory:      30170
 
 
+    ci_perf_buildbot_www:     30230
+    ci_perf_buildbot_worker:  30231
+    ci_perf_postgres:               30232
+    ci_perf_crossbar:         30233
+
+
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zk_host }}"

@@ -1,0 +1,78 @@
+- name: Deploy buildbot
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: ciperf/buildbot
+    group_json:
+        dependencies:
+            - /core/lb
+            - /core/logging
+            - /ci/backend
+        apps:
+        -
+            id: buildbot
+            cpus: 5
+            mem: 14024
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: buildbot/buildbot-master-pypy:0.9.3_485
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8080
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.ci_perf_buildbot_www }}"
+                - containerPort: 9989
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.ci_perf_buildbot_worker }}"
+            env:
+                BUILDBOT_CONFIG_DIR: config
+                BUILDBOT_CONFIG_URL: https://github.com/tardyp/ci_perfs/archive/master.tar.gz
+                BUILDBOT_WORKER_PORT: '9989'
+                BUILDBOT_WEB_URL: "https://{{ nginx_external_url | host_from_url }}/ci_perf_buildbot/"
+                BUILDBOT_WEB_PORT: '8080'
+                BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts.ci_perf_postgres}}/{{POSTGRES_DB}}
+                BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts.ci_perf_crossbar}}/ws
+                BUILDBOT_MQ_REALM: realm1
+                https_proxy: "{{zk.proxy_env.https_proxy}}"
+                http_proxy: "{{zk.proxy_env.http_proxy}}"
+                no_proxy: "{{zk.proxy_env.no_proxy}}"
+                ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
+                MARATHON_URL: "{{ marathon_uri }}"
+                BUILDMASTER_LB_HOST: "{{ docker_ip }}"
+                BUILDMASTER_LB_PORT: "{{ servicePorts.ci_perf_buildbot_worker }}"
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: "172.17.0.1"
+              subdomain: '/ci_perf_buildbot/'
+              upstream_name: 'ci_perf_buildbot'
+
+            healthChecks:
+            - "{{ basic_http_health_check }}"
+
+        -   id: "worker"
+            cmd:
+            cpus: 0.4
+            mem: 256
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: "tardyp/buildbot_zk_worker"
+                network: BRIDGE
+                privileged: false
+                parameters: []
+                forcePullImage: false
+            env:
+                BUILDMASTER: "{{ docker_ip }}"
+                BUILDMASTER_PORT: "{{ servicePorts.ci_perf_buildbot_worker }}"
+                WORKERNAME: "worker{{ '{' + zookeeper_worker_path + '}'}}"
+                WORKERPASS: pass
+                WORKER_ENVIRONMENT_BLACKLIST: DOCKER_BUILDBOT* BUILDBOT_ENV_* BUILDBOT_1* WORKER_ENVIRONMENT_BLACKLIST
