@@ -29,6 +29,8 @@ servicePorts:
     buildbot_hooks:   30032
 
     postgres:         30040
+    neo4j:            30041
+    neo4jbolt:        30042
 
     crossbar:         30050
 

@@ -69,3 +69,47 @@
                 PGDATA: "/mnt/mesos/sandbox/pgdata"
             healthChecks:
             - "{{ basic_tcp_health_check }}"
+
+        -   id: "neo4j"
+            cmd:
+            cpus: 8
+            mem: 8000
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes:
+              - containerPath: "neo4jdata"
+                mode: "RW"
+                persistent:
+                 type: "root"
+                 size: 1000
+              - containerPath: "/data"
+                hostPath: "neo4jdata"
+                mode: "RW"
+              docker:
+                image: neo4j
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: false
+                portMappings:
+                - containerPort: 7474
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.neo4j }}"
+                - containerPort: 7687
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.neo4jbolt }}"
+            residency:
+                taskLostBehavior: "WAIT_FOREVER"
+            upgradeStrategy:
+                minimumHealthCapacity: 0.5
+                maximumOverCapacity: 0
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
+              subdomain: 'neo4j'
+            env:
+                NEO4J_AUTH: none
+            healthChecks:
+            - "{{ basic_tcp_health_check }}"
