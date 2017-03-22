@@ -7,9 +7,9 @@ for sleeptime in 0
 do
 for numlines in 10000 40000 100
 do
-for workers in 10 #200 300 
+for workers in 100 200 300 
 do
-python stressmarathon.py 3 $workers $masters pypy $numlines $sleeptime || exit
+python stressmarathon.py 300 $workers $masters pypy $numlines $sleeptime || exit
 done
 python stressmarathon.py -f 0 0 0 0 0 0
 done

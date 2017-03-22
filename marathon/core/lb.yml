@@ -87,10 +87,10 @@
                 MARATHON_LIST: "  [\"{{ marathon_uri }}\"]"
 
             uris:
-                - "{{ zk_http_discovered_url }}/etc/nixy/nixy.toml"
-                - "{{ zk_http_discovered_url }}/etc/nixy/nginx.tmpl"
-                - "{{ zk_http_discovered_url }}/certs/forestscribe.crt"
-                - "{{ zk_http_discovered_url }}/certs/forestscribe.key"
+                - "{{ zk_http_url }}/etc/nixy/nixy.toml"
+                - "{{ zk_http_url }}/etc/nixy/nginx.tmpl"
+                - "{{ zk_http_url }}/certs/forestscribe.crt"
+                - "{{ zk_http_url }}/certs/forestscribe.key"
 
             upgradeStrategy:
                 minimumHealthCapacity: 0.2
