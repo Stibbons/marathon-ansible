@@ -1,0 +1,60 @@
+- name: Deploy buildbot
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: stagingci/buildbot
+    group_json:
+        dependencies:
+            - /core/lb
+            - /core/logging
+            - /ci/backend
+        apps:
+        -
+            id: buildbot
+            cpus: 5
+            mem: 14024
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: forestscribe/buildbot-config
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8080
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.st_buildbot_www }}"
+                - containerPort: 9989
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.st_buildbot_worker }}"
+            env:
+                BUILDBOT_CONFIG_DIR: config
+                BUILDBOT_CONFIG_URL: https://github.com/forestscribe/buildbot-config/archive/master.tar.gz
+                BUILDBOT_WORKER_PORT: '9989'
+                BUILDBOT_WEB_URL: "https://{{ nginx_external_url | host_from_url }}/st_buildbot/"
+                BUILDBOT_WEB_PORT: '8080'
+                BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts.st_postgres}}/{{POSTGRES_DB}}
+                #BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts.crossbar}}/ws
+                #BUILDBOT_MQ_REALM: realm1
+                https_proxy: "{{zk.proxy_env.https_proxy}}"
+                http_proxy: "{{zk.proxy_env.http_proxy}}"
+                no_proxy: "{{zk.proxy_env.no_proxy}}"
+                ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
+                MARATHON_URL: "{{ marathon_uri }}"
+                GITHUB_TOKEN: "{{ github_status_token }}"
+                BUILDMASTER_LB_HOST: "{{ docker_ip }}"
+                BUILDMASTER_LB_PORT: "{{ servicePorts.st_buildbot_worker }}"
+                ART_OUTPUT_URL: "http://admin:admin@{{ docker_ip }}:{{servicePorts.st_artifactory}}/artifactory"
+                ART_URL: "https://staging_artifactory.{{ nginx_external_url | host_from_url }}/artifactory"
+                GELF_URL: "udp://{{docker_ip}}:{{servicePorts.logstash}}"
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: "172.17.0.1"
+              subdomain: '/st_buildbot/'
+              upstream_name: 'st_buildbot'
+
+            healthChecks:
+            - "{{ basic_http_health_check }}"

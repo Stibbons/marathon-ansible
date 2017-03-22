@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    # order is important (until we implement marathon groups)
+    - include: "staging_ci/backends.yml"
+    - include: "staging_ci/artifactory.yml"
+    - include: "staging_ci/buildbot.yml"

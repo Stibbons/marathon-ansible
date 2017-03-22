@@ -1,0 +1,47 @@
+- name: Deploy ci artifact store
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: stagingci/artifactory
+    group_json:
+        dependencies:
+            - /core/lb
+            - /core/logging
+        apps:
+        -   id: artifactory
+            cpus: 1
+            mem: 4096
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes:
+              - containerPath: "artidata"
+                mode: "RW"
+                persistent:
+                 type: "root"
+                 size: 10000
+              - containerPath: "/var/opt/jfrog/artifactory"
+                hostPath: "artidata"
+                mode: "RW"
+              docker:
+                image: "docker.bintray.io/jfrog/artifactory-oss:latest"
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8081
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.st_artifactory }}"
+            healthChecks:
+            - "{{ basic_http_health_check }}"
+            residency:
+                taskLostBehavior: "WAIT_FOREVER"
+            upgradeStrategy:
+                minimumHealthCapacity: 0.5
+                maximumOverCapacity: 0
+            labels:
+              subdomain: 'staging_artifactory'
+              upstream_name: 'staging_artifactory'
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
