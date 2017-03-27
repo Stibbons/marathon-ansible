@@ -27,10 +27,12 @@ servicePorts:
     buildbot_www:     30030
     buildbot_worker:  30031
     buildbot_hooks:   30032
+    github_hooks:     30033
 
     postgres:         30040
     neo4j:            30041
     neo4jbolt:        30042
+    redis:            30044
 
     crossbar:         30050
 

@@ -1,0 +1,60 @@
+- name: Deploy github_hooks
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: ci/buildbot
+    group_json:
+        dependencies:
+            - /core/lb
+            - /core/logging
+            - /ci/backend
+        apps:
+        -
+            id: githubhooks
+            cpus: 1
+            mem: 512
+            disk: 0
+            instances: 1
+            cmd: gunicorn app:app
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: forestscribe/github_hooks
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: true
+                portMappings:
+                - containerPort: 8000
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.github_hooks }}"
+            env:
+                CELERY_BROKER_URL: redis://{{docker_ip}}:servicePorts.redis
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: "172.17.0.1"
+              subdomain: '/github_hooks'
+              upstream_name: 'github_hooks'
+
+            healthChecks:
+            - "{{ basic_http_health_check }}"
+
+        -
+            id: githubhooksworker
+            cpus: 1
+            mem: 512
+            disk: 0
+            instances: 2
+            cmd: pypy3 github_hooks.py
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: forestscribe/github_hooks
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: true
+                portMappings: []
+            env:
+                CELERY_BROKER_URL: redis://{{docker_ip}}:servicePorts.redis

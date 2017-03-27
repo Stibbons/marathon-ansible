@@ -6,3 +6,4 @@
     - include: "ci/backends.yml"
     - include: "ci/artifactory.yml"
     - include: "ci/buildbot.yml"
+    - include: "ci/github_hooks.yml"
