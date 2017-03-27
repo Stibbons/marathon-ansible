@@ -108,8 +108,33 @@
             labels:
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
-              subdomain: 'neo4j'
+              subdomain: 'neo3j'
             env:
                 NEO4J_AUTH: none
+            healthChecks:
+            - "{{ basic_tcp_health_check }}"
+
+        -   id: "redis"
+            cmd:
+            cpus: 2
+            mem: 1000
+            disk: 0
+            instances: 1
+            container:
+              type: DOCKER
+              volumes: []
+              docker:
+                image: redis:alpine
+                network: BRIDGE
+                privileged: false
+                parameters: "{{ docker_log_driver_parameters }}"
+                forcePullImage: false
+                portMappings:
+                - containerPort: 6379
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.redis }}"
+            labels:
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
             healthChecks:
             - "{{ basic_tcp_health_check }}"
