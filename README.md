@@ -3,6 +3,7 @@ ansible playbook and tools to run Forestscribe infra in marathon
 
     export ZK_HOST=<zk_host>:<zk_port>
     pipenv --two
+    pipenv install --ignore-hashes
     pipenv run ansible-playbook marathon/core.yml
     pipenv run ansible-playbook marathon/ci.yml
     pipenv run ansible-playbook marathon/sota.yml

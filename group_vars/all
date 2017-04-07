@@ -50,6 +50,7 @@ servicePorts:
     sota_ldap:            30105
     sota_webserver:       30106
 
+
     st_buildbot_www:     30130
     st_buildbot_worker:  30131
 
@@ -62,9 +63,16 @@ servicePorts:
 
     ci_perf_buildbot_www:     30230
     ci_perf_buildbot_worker:  30231
-    ci_perf_postgres:               30232
+    ci_perf_postgres:         30232
     ci_perf_crossbar:         30233
 
+    airflow_mesos_backend:           30234
+    airflow_mesos_flower:            30235
+    airflow_celery_backend:          30236
+    airflow_celery_flower:           30237
+    airflow_celery_worker_log:       30238
+    airflow_pg:                      30239
+    airflow_redis:                   30240
 
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
