@@ -74,6 +74,8 @@ servicePorts:
     airflow_pg:                      30239
     airflow_redis:                   30240
 
+    jupyterhub:               30250
+
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zk_host }}"
