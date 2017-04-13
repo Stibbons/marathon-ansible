@@ -76,6 +76,8 @@ servicePorts:
 
     jupyterhub:               30250
 
+    api_gateway:              30310
+
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zk_host }}"
