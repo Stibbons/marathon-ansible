@@ -6,3 +6,4 @@
     - include: "core/lb.yml"
     - include: "core/metrics.yml"
     - include: "core/logging.yml"
+    - include: "core/traefik.yml"

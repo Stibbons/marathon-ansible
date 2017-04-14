@@ -68,6 +68,8 @@
             subdomain: '/airflow/celery/server'
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
+            traefik.enable: "true"
+            traefik.frontend.rule: "Host:airflow.t.forestscribe.{{ domain_ext }}"
 
         - id: "flower"
           dependencies:
@@ -129,6 +131,8 @@
             subdomain: '/airflow/celery/flower'
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
+            traefik.enable: "true"
+            traefik.frontend.rule: "Host:flower.t.forestscribe.{{ domain_ext }}"
 
         - id: "/airflow/celery/scheduler"
           dependencies:
@@ -222,13 +226,13 @@
             REDIS_HOST: "{{ docker_ip }}"
             REDIS_PORT: "{{ servicePorts.airflow_redis }}"
             FRENET_KEY: AFKp0LrregZGOucp22eOr0jW0Ru2PmbZzBWoeCdL8Vk=
-            http_proxy: http://proxy-ir.intel.com:911
-            https_proxy: http://proxy-ir.intel.com:912
-            no_proxy: 127.0.0.1,localhost,intel.com,.intel.com,172.17.0.1
-            HTTP_PROXY: http://proxy-ir.intel.com:911
-            HTTPS_PROXY: http://proxy-ir.intel.com:912
-            NO_PROXY: 127.0.0.1,localhost,intel.com,.intel.com,172.17.0.1
-            ALL_PROXY: socks://proxy-ir.intel.com:1080
+            http_proxy: http://proxy-ir.{{ domain_ext }}:911
+            https_proxy: http://proxy-ir.{{ domain_ext }}:911
+            no_proxy: 127.0.0.1,localhost,{{ domain_ext }},.{{ domain_ext }},172.17.0.1
+            HTTP_PROXY: http://proxy-ir.{{ domain_ext }}:911
+            HTTPS_PROXY: http://proxy-ir.{{ domain_ext }}:911
+            NO_PROXY: 127.0.0.1,localhost,{{ domain_ext }},.{{ domain_ext }},172.17.0.1
+            ALL_PROXY: socks://proxy-ir.{{ domain_ext }}:1080
             LOAD_EX: "y" # Do load default example DAGs
           healthChecks:
             - protocol: "TCP"

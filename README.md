@@ -14,3 +14,10 @@ To populate zk with the ansible vault (only need to be done once, or when new in
     cat 'XXX' > ~/.vault-password.forestscribe  # get this file from pierre
     export ZK_HOST=<zk_host>:<zk_port>
     ansible-playbook zk_populate.yml --vault-password-file=~/.vault-password.forestscribe
+
+For Traefik related:
+
+    export DOMAIN_EXT=<domainserver.ext>
+    export ZK_HOST=<zk_host>:<zk_port>
+    pipenv install --ignore-hashes
+    pipenv run ansible-playbook marathon/traefik.yml

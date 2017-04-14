@@ -76,12 +76,17 @@ servicePorts:
 
     jupyterhub:               30250
 
+    traefik_admin:            30300
+    traefik_http:             30301
+
     api_gateway:              30310
+
 
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zk_host }}"
 zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
+domain_ext: "{{ ansible_env.DOMAIN_EXT }}"
 
 zookeeper_worker_path: "{{ zookeeper_uri }}/workers/ids/"
 

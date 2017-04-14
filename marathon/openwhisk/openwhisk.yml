@@ -13,7 +13,7 @@
             instances: 1
             env:
               LOG_LEVEL: 'info'
-              MARATHON_HOST: 'http://tlsisbld126l.tl.intel.com:5050'
+              MARATHON_HOST: 'http://tlsisbld126l.tl.{{ domain_ext }}:5050'
             container:
               type: DOCKER
               docker:
@@ -42,7 +42,7 @@
             constraints:
               - - hostname
                 - LIKE
-                - tlsisbld127l.tl.intel.com
+                - tlsisbld127l.tl.{{ domain_ext }}
 
           - id: couchdb
             cpus: 1

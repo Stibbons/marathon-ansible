@@ -4,3 +4,4 @@
 *.lock
 sourceme
 run.sh
+traefik_linux*
