@@ -1,7 +1,15 @@
 - vars:
-    traefik_param: "--web --marathon --marathon.domain=marathon.localhost"
+    traefik_conf_path: "/etc/traefik/traefik.toml"
+    traefik_conf_url: "{{ zk_http_url }}/{{ traefik_conf_path }}"
 
   block:
+    - name: upload traefik conf in zk
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "{{ traefik_conf_path }}"
+        value: "{{ lookup('template', 'traefik/traefik.toml') }}"
+        state: present
+
     - name: "Deploy Traefik Reverse Proxy"
       marathon:
         marathon_uri: "{{ marathon_uri }}"
@@ -18,24 +26,10 @@
               instances: 1
               args:
                 - "--web"
-                - "--marathon"
-                - "--marathon.endpoint=http://tlsisbld126l.tl.{{ domain_ext }}:8080"
-                - "--marathon.watch=true"
-                - "--marathon.domain=marathon.localhost"
-                - "--marathon.exposedbydefault=false"
-                - "--marathon.marathonlbcompatibility=true"
                 - "--logLevel=DEBUG"
+                - "--configfile=/mnt/mesos/sandbox/traefik.toml"
               container:
                 type: DOCKER
-                volumes:
-                  - hostPath: /dev/null
-                    containerPath: /etc/traefik/traefik.toml
-                    mode: RW
-                  - containerPath: "data"
-                    mode: "RW"
-                    persistent:
-                      type: "root"
-                      size: 1024
                 docker:
                   # image: "traefik"
                   image: stibbons31/traefik-workaround-marathon-bad-gateway:workaround_marathon_bad_gateway
@@ -50,7 +44,7 @@
                       hostPort: 80
                       name: "80"
                       servicePort: "{{ servicePorts.traefik_http }}"
-                    - containerPort: 8080
+                    - containerPort: 19050
                       hostPort: 19050
                       protocol: tcp
                       name: "admin"
@@ -84,16 +78,9 @@
                 traefik.enable: "false"
               constraints:
                 - - hostname
+                  - UNIQUE
+                - - hostname
                   - LIKE
                   - tlsisbld127l.tl.{{ domain_ext }}
-              #portDefinitions:
-              #  - port: 80
-              #    servicePort: 80
-              #    hostPort: 80
-              #    protocol: "tcp"
-              #    name: "http"
-              #  - port: 8080
-              #    servicePort: 8080
-              #    hostPort: 8080
-              #    protocol: "tcp"
-              #    name: "admin"
+              uris:
+                  - "{{ traefik_conf_url }}"

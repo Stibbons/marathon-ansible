@@ -69,6 +69,7 @@
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
             traefik.enable: "true"
+            # traefik.frontend.rule: "Host:airflow.{domain}"
             traefik.frontend.rule: "Host:airflow.t.forestscribe.{{ domain_ext }}"
 
         - id: "flower"
@@ -132,6 +133,7 @@
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
             traefik.enable: "true"
+            # traefik.frontend.rule: "Host:flower.{domain}"
             traefik.frontend.rule: "Host:flower.t.forestscribe.{{ domain_ext }}"
 
         - id: "/airflow/celery/scheduler"

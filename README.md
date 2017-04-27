@@ -1,6 +1,6 @@
 ansible playbook and tools to run Forestscribe infra in marathon
 
-
+    sudo -E pip install kazoo # (needed for Zookeeper tasks)
     export ZK_HOST=<zk_host>:<zk_port>
     pipenv --two
     pipenv install --ignore-hashes

@@ -1,0 +1,230 @@
+# traefik.toml
+################################################################
+# Global configuration
+################################################################
+
+# Timeout in seconds.
+# Duration to give active requests a chance to finish during hot-reloads
+#
+# Optional
+# Default: 10
+#
+# graceTimeOut = 10
+
+# Enable debug mode
+#
+# Optional
+# Default: false
+#
+# debug = true
+
+# Periodically check if a new version has been released
+#
+# Optional
+# Default: true
+#
+# checkNewVersion = false
+
+# Traefik logs file
+# If not defined, logs to stdout
+#
+# Optional
+#
+# traefikLogsFile = "log/traefik.log"
+
+# Access logs file
+#
+# Optional
+#
+# accessLogsFile = "log/access.log"
+
+# Log level
+#
+# Optional
+# Default: "ERROR"
+# Accepted values, in order of severity: "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "PANIC"
+# Messages at and above the selected level will be logged.
+#
+logLevel = "ERROR"
+
+# Backends throttle duration: minimum duration in seconds between 2 events from providers
+# before applying a new configuration. It avoids unnecessary reloads if multiples events
+# are sent in a short amount of time.
+#
+# Optional
+# Default: "2"
+#
+# ProvidersThrottleDuration = "5"
+
+# Controls the maximum idle (keep-alive) connections to keep per-host. If zero, DefaultMaxIdleConnsPerHost
+# from the Go standard library net/http module is used.
+# If you encounter 'too many open files' errors, you can either increase this
+# value or change the `ulimit`.
+#
+# Optional
+# Default: 200
+#
+# MaxIdleConnsPerHost = 200
+
+# If set to true invalid SSL certificates are accepted for backends.
+# Note: This disables detection of man-in-the-middle attacks so should only be used on secure backend networks.
+# Optional
+# Default: false
+#
+# InsecureSkipVerify = true
+
+# Entrypoints to be used by frontends that do not specify any entrypoint.
+# Each frontend can specify its own entrypoints.
+#
+# Optional
+# Default: ["http"]
+#
+# defaultEntryPoints = ["http", "https"]
+
+
+
+################################################################
+# Web configuration backend
+################################################################
+
+# Enable web configuration backend
+#
+# Optional
+#
+[web]
+
+# Web administration port
+#
+# Required
+#
+address = ":19050"
+
+# SSL certificate and key used
+#
+# Optional
+#
+# CertFile = "traefik.crt"
+# KeyFile = "traefik.key"
+#
+# Set REST API to read-only mode
+#
+# Optional
+# ReadOnly = false
+
+
+################################################################
+# Mesos/Marathon configuration backend
+################################################################
+
+# Enable Marathon configuration backend
+#
+# Optional
+#
+[marathon]
+
+# Marathon server endpoint.
+# You can also specify multiple endpoint for Marathon:
+# endpoint := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
+#
+# Required
+#
+endpoint = "http://tlsisbld126l.tl.{{ domain_ext }}:8080"
+
+# Enable watch Marathon changes
+#
+# Optional
+#
+watch = true
+
+# Default domain used.
+#
+# Required
+#
+# domain = "t.forestscribe.{{ domain_ext }}"
+domain = "t.forestscribe.{{ domain_ext }}"
+
+# Override default configuration template. For advanced users :)
+#
+# Optional
+#
+# filename = "marathon.tmpl"
+
+# Expose Marathon apps by default in traefik
+#
+# Optional
+# Default: true
+#
+exposedByDefault = false
+
+# Convert Marathon groups to subdomains
+# Default behavior: /foo/bar/myapp => foo-bar-myapp.{defaultDomain}
+# with groupsAsSubDomains enabled: /foo/bar/myapp => myapp.bar.foo.{defaultDomain}
+#
+# Optional
+# Default: false
+#
+# groupsAsSubDomains = true
+
+# Enable compatibility with marathon-lb labels
+#
+# Optional
+# Default: false
+#
+marathonLBCompatibility = true
+
+# Enable Marathon basic authentication
+#
+# Optional
+#
+#  [marathon.basic]
+#  httpBasicAuthUser = "foo"
+#  httpBasicPassword = "bar"
+
+# TLS client configuration. https://golang.org/pkg/crypto/tls/#Config
+#
+# Optional
+#
+# [marathon.TLS]
+# CA = "/etc/ssl/ca.crt"
+# Cert = "/etc/ssl/marathon.cert"
+# Key = "/etc/ssl/marathon.key"
+# InsecureSkipVerify = true
+
+# DCOSToken for DCOS environment, This will override the Authorization header
+#
+# Optional
+#
+# dcosToken = "xxxxxx"
+
+# Override DialerTimeout
+# Amount of time in seconds to allow the Marathon provider to wait to open a TCP
+# connection to a Marathon master
+#
+# Optional
+# Default: 60
+# dialerTimeout = 5
+
+# Set the TCP Keep Alive interval (in seconds) for the Marathon HTTP Client
+#
+# Optional
+# Default: 10
+#
+# keepAlive = 10
+
+[file]
+
+# rules
+[backends]
+  [backends.backend_marathon]
+    [backends.backend_marathon.circuitbreaker]
+      expression = "NetworkErrorRatio() > 0.5"
+    [backends.backend_marathon.servers.server1]
+    url = "http://tlsisbld126l.tl.{{ domain_ext }}:8080"
+    weight = 10
+
+[frontends]
+  [frontends.frontend_marathon]
+  backend = "backend_marathon"
+    [frontends.frontend_marathon.routes.route1]
+    rule = "Host:marathon.t.forestscribe.intel.com"
+    port = 80
