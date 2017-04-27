@@ -109,6 +109,8 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               subdomain: 'neo3j'
+              traefik.enable: "true"
+              traefik.frontend.rule: "Host:neo3j.forestscribe.{{ domain_ext }}"
             env:
                 NEO4J_AUTH: none
             healthChecks:

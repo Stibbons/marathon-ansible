@@ -36,9 +36,11 @@
                 timeoutSeconds: 10
                 maxConsecutiveFailures: 2
             labels:
-              subdomain: '/openwhisk/apigateway'
+              subdomain: 'apigateway'
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Host:apigateway.forestscribe.{{ domain_ext }}"
             constraints:
               - - hostname
                 - LIKE

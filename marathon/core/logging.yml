@@ -54,16 +54,15 @@
                         - containerPort: 9200
                           servicePort: "{{ servicePorts['elasticsearch'] }}"
                           protocol: tcp
-
                     labels:
                       HAPROXY_GROUP: external
                       HAPROXY_BIND_ADDR: 0.0.0.0
                       subdomain: '/elasticsearch/'
                       upstream_name: 'elasticsearch'
-
+                      traefik.enable: "true"
+                      traefik.frontend.rule: "Path:/elasticsearch"
                     env:
                         PORT: "9200"
-
                     residency:
                         taskLostBehavior: "WAIT_FOREVER"
                     upgradeStrategy:
@@ -71,6 +70,7 @@
                         maximumOverCapacity: 0
                     healthChecks:
                     - "{{ basic_http_health_check }}"
+
                 -   id: "kibana"
                     cmd:
                     cpus: 4
@@ -94,10 +94,10 @@
                         - containerPort: 5601
                           servicePort: "{{ servicePorts.kibana }}"
                           protocol: tcp
-
                     labels:
                       subdomain: 'kibana'
-
+                      traefik.enable: "true"
+                      traefik.frontend.rule: "Host:kibana.forestscribe.{{ domain_ext }}"
                     env:
                         PORT: "5601"
                         ELASTICSEARCH_URL: "http://{{docker_ip}}:{{ servicePorts.elasticsearch }}"

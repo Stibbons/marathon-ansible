@@ -76,6 +76,8 @@
               upstream_name: 'sotaregistry'
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Path:/sota-registry"
             env:
                 HOST: 0.0.0.0
                 PORT: "8083"
@@ -115,6 +117,8 @@
               upstream_name: 'sotaresolver'
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Path:/sota-resolver"
             env:
                 HOST: 0.0.0.0
                 PORT: "8081"
@@ -156,6 +160,8 @@
               upstream_name: 'sotacore'
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Path:/sota-core"
             env:
                 HOST: 0.0.0.0
                 PORT: "8080"
@@ -222,6 +228,8 @@
               upstream_name: 'sota'
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Host:ota.forestscribe.{{ domain_ext }}"
             env:
                 HOST: "0.0.0.0"
                 PORT: "9000"

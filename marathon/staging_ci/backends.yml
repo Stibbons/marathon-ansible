@@ -25,7 +25,6 @@
                   protocol: tcp
                   servicePort: "{{ servicePorts.st_crossbar }}"
                 parameters: "{{ docker_log_driver_parameters }}"
-
             labels:
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1

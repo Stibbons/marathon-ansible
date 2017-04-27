@@ -62,6 +62,8 @@
               upstream_name: 'zkhttp'
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Path:/zkhttp"
             env:
                 ZK_HOST: "{{ zk_host }}"
 
@@ -72,9 +74,9 @@
             cpus: .5
             mem: 512
             disk: 0
-            instances: "{{ marathon_num_agents }}"
+            instances: 0 # "{{ marathon_num_agents }}"
             constraints:
-            - - [ "hostname", "UNIQUE" ]
+              - [ "hostname", "UNIQUE" ]
               - [ "hostname", "UNLIKE", "tlsisbld127l.tl.{{ domain_ext }}"]
             container:
               type: DOCKER
@@ -86,13 +88,11 @@
                 forcePullImage: true
             env:
                 MARATHON_LIST: "  [\"{{ marathon_uri }}\"]"
-
             uris:
                 - "{{ zk_http_url }}/etc/nixy/nixy.toml"
                 - "{{ zk_http_url }}/etc/nixy/nginx.tmpl"
                 - "{{ zk_http_url }}/certs/forestscribe.crt"
                 - "{{ zk_http_url }}/certs/forestscribe.key"
-
             upgradeStrategy:
                 minimumHealthCapacity: 0.2
             portDefinitions: [] # dont put port definition or it will try to load balance it!
