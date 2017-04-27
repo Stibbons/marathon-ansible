@@ -23,11 +23,6 @@
               - hostPath: airflowdags
                 containerPath: /usr/local/airflow/dags
                 mode: RW
-              - containerPath: "airflowdags"
-                mode: "RW"
-                persistent:
-                  type: "root"
-                  size: 1024
             docker:
               image: "stibbons31/docker-airflow-dev"
               # image: "puckel/docker-airflow"
@@ -36,20 +31,27 @@
               parameters: "{{ docker_log_driver_parameters }}"
               forcePullImage: true
               portMappings:
-                  - containerPort: 8080
-                    protocol: tcp
-                    servicePort: "{{ servicePorts.airflow_celery_backend }}"
+                - containerPort: 8080
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.airflow_celery_backend }}"
           env:
             EXECUTOR: "Celery"
-            POSTGRES_USER: airflow
-            POSTGRES_PASSWORD: airflow
+            POSTGRES_USER: "{{ zk.secrets.airflow_postgres_user }}"
+            POSTGRES_PASSWORD: "{{ zk.secrets.airflow_postgres_password }}"
             POSTGRES_HOST: "{{ docker_ip }}"
             POSTGRES_PORT: "{{ servicePorts.airflow_pg }}"
             POSTGRES_DB: "airflow"
             REDIS_HOST: "{{ docker_ip }}"
             REDIS_PORT: "{{ servicePorts.airflow_redis }}"
-            FRENET_KEY: AFKp0LrregZGOucp22eOr0jW0Ru2PmbZzBWoeCdL8Vk=
+            FERNET_KEY: "{{ zk.secrets.airflow_fernet_key }}"
             LOAD_EX: "y" # Do load default example DAGs
+            https_proxy: "{{zk.proxy_env.https_proxy}}"
+            HTTPS_PROXY: "{{zk.proxy_env.https_proxy}}"
+            http_proxy: "{{zk.proxy_env.http_proxy}}"
+            HTTP_PROXY: "{{zk.proxy_env.http_proxy}}"
+            no_proxy: "{{zk.proxy_env.no_proxy}}"
+            NO_PROXY: "{{zk.proxy_env.no_proxy}}"
+            ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
           healthChecks:
             - path: "/health"
               protocol: "HTTP"
@@ -59,18 +61,15 @@
               timeoutSeconds: 20
               maxConsecutiveFailures: 3
               ignoreHttp1xx: false
-          residency:
-            taskLostBehavior: "WAIT_FOREVER"
           upgradeStrategy:
             minimumHealthCapacity: 0.5
-            maximumOverCapacity: 0
           labels:
             subdomain: '/airflow/celery/server'
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
             traefik.enable: "true"
             # traefik.frontend.rule: "Host:airflow.{domain}"
-            traefik.frontend.rule: "Host:airflow.t.forestscribe.{{ domain_ext }}"
+            traefik.frontend.rule: "Host:airflow.{{ sub_domain }}"
 
         - id: "flower"
           dependencies:
@@ -87,11 +86,6 @@
               - hostPath: airflowdags
                 containerPath: /usr/local/airflow/dags
                 mode: RW
-              - containerPath: "airflowdags"
-                mode: "RW"
-                persistent:
-                    type: "root"
-                    size: 1024
             docker:
               image: "stibbons31/docker-airflow-dev"
               # image: "puckel/docker-airflow"
@@ -105,15 +99,22 @@
                   servicePort: "{{ servicePorts.airflow_celery_flower }}"
           env:
             EXECUTOR: "Celery"
-            POSTGRES_USER: airflow
-            POSTGRES_PASSWORD: airflow
+            POSTGRES_USER: "{{ zk.secrets.airflow_postgres_user }}"
+            POSTGRES_PASSWORD: "{{ zk.secrets.airflow_postgres_password }}"
             POSTGRES_HOST: "{{ docker_ip }}"
             POSTGRES_PORT: "{{ servicePorts.airflow_pg }}"
             POSTGRES_DB: "airflow"
             REDIS_HOST: "{{ docker_ip }}"
             REDIS_PORT: "{{ servicePorts.airflow_redis }}"
-            FRENET_KEY: AFKp0LrregZGOucp22eOr0jW0Ru2PmbZzBWoeCdL8Vk=
+            FERNET_KEY: "{{ zk.secrets.airflow_fernet_key }}"
             LOAD_EX: "y" # Do load default example DAGs
+            https_proxy: "{{zk.proxy_env.https_proxy}}"
+            HTTPS_PROXY: "{{zk.proxy_env.https_proxy}}"
+            http_proxy: "{{zk.proxy_env.http_proxy}}"
+            HTTP_PROXY: "{{zk.proxy_env.http_proxy}}"
+            no_proxy: "{{zk.proxy_env.no_proxy}}"
+            NO_PROXY: "{{zk.proxy_env.no_proxy}}"
+            ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
           healthChecks:
             - path: "/"
               protocol: "HTTP"
@@ -123,18 +124,15 @@
               timeoutSeconds: 20
               maxConsecutiveFailures: 3
               ignoreHttp1xx: false
-          residency:
-            taskLostBehavior: "WAIT_FOREVER"
           upgradeStrategy:
             minimumHealthCapacity: 0.5
-            maximumOverCapacity: 0
           labels:
             subdomain: '/airflow/celery/flower'
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
             traefik.enable: "true"
             # traefik.frontend.rule: "Host:flower.{domain}"
-            traefik.frontend.rule: "Host:flower.t.forestscribe.{{ domain_ext }}"
+            traefik.frontend.rule: "Host:flower.{{ sub_domain }}"
 
         - id: "/airflow/celery/scheduler"
           dependencies:
@@ -151,11 +149,6 @@
               - hostPath: airflowdags
                 containerPath: /usr/local/airflow/dags
                 mode: RW
-              - containerPath: "airflowdags"
-                mode: "RW"
-                persistent:
-                  type: "root"
-                  size: 1024
             docker:
               image: "stibbons31/docker-airflow-dev"
               # image: "puckel/docker-airflow"
@@ -165,17 +158,22 @@
               forcePullImage: true
           env:
             EXECUTOR: "Celery"
-            POSTGRES_USER: airflow
-            POSTGRES_PASSWORD: airflow
+            POSTGRES_USER: "{{ zk.secrets.airflow_postgres_user }}"
+            POSTGRES_PASSWORD: "{{ zk.secrets.airflow_postgres_password }}"
             POSTGRES_HOST: "{{ docker_ip }}"
             POSTGRES_PORT: "{{ servicePorts.airflow_pg }}"
             POSTGRES_DB: "airflow"
             REDIS_HOST: "{{ docker_ip }}"
             REDIS_PORT: "{{ servicePorts.airflow_redis }}"
             LOAD_EX: "y" # Do load default example DAGs
-            FRENET_KEY: AFKp0LrregZGOucp22eOr0jW0Ru2PmbZzBWoeCdL8Vk=
-          residency:
-            taskLostBehavior: "WAIT_FOREVER"
+            FERNET_KEY: "{{ zk.secrets.airflow_fernet_key }}"
+            https_proxy: "{{zk.proxy_env.https_proxy}}"
+            HTTPS_PROXY: "{{zk.proxy_env.https_proxy}}"
+            http_proxy: "{{zk.proxy_env.http_proxy}}"
+            HTTP_PROXY: "{{zk.proxy_env.http_proxy}}"
+            no_proxy: "{{zk.proxy_env.no_proxy}}"
+            NO_PROXY: "{{zk.proxy_env.no_proxy}}"
+            ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
           healthChecks:
             - protocol: "COMMAND"
               command:
@@ -202,11 +200,6 @@
               - hostPath: airflowdags
                 containerPath: /usr/local/airflow/dags
                 mode: RW
-              - containerPath: "airflowdags"
-                mode: "RW"
-                persistent:
-                  type: "root"
-                  size: 1024
             docker:
               # image: "puckel/docker-airflow"
               image: "stibbons31/docker-airflow-dev"
@@ -220,21 +213,24 @@
                   servicePort: "{{ servicePorts.airflow_celery_worker_log }}"
           env:
             EXECUTOR: "Celery"
-            POSTGRES_USER: airflow
-            POSTGRES_PASSWORD: airflow
+            POSTGRES_USER: "{{ zk.secrets.airflow_postgres_user }}"
+            POSTGRES_PASSWORD: "{{ zk.secrets.airflow_postgres_password }}"
             POSTGRES_HOST: "{{ docker_ip }}"
             POSTGRES_PORT: "{{ servicePorts.airflow_pg }}"
             POSTGRES_DB: "airflow"
             REDIS_HOST: "{{ docker_ip }}"
             REDIS_PORT: "{{ servicePorts.airflow_redis }}"
-            FRENET_KEY: AFKp0LrregZGOucp22eOr0jW0Ru2PmbZzBWoeCdL8Vk=
-            http_proxy: http://proxy-ir.{{ domain_ext }}:911
-            https_proxy: http://proxy-ir.{{ domain_ext }}:911
-            no_proxy: 127.0.0.1,localhost,{{ domain_ext }},.{{ domain_ext }},172.17.0.1
-            HTTP_PROXY: http://proxy-ir.{{ domain_ext }}:911
-            HTTPS_PROXY: http://proxy-ir.{{ domain_ext }}:911
-            NO_PROXY: 127.0.0.1,localhost,{{ domain_ext }},.{{ domain_ext }},172.17.0.1
-            ALL_PROXY: socks://proxy-ir.{{ domain_ext }}:1080
+            # Generated by
+            #   python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY"
+            FERNET_KEY: "{{ zk.secrets.airflow_fernet_key }}"
+            https_proxy: "{{zk.proxy_env.https_proxy}}"
+            HTTPS_PROXY: "{{zk.proxy_env.https_proxy}}"
+            http_proxy: "{{zk.proxy_env.http_proxy}}"
+            HTTP_PROXY: "{{zk.proxy_env.http_proxy}}"
+            no_proxy: "{{zk.proxy_env.no_proxy}}"
+            NO_PROXY: "{{zk.proxy_env.no_proxy}}"
+            ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
+            MARATHON_URL: "{{ marathon_uri }}"
             LOAD_EX: "y" # Do load default example DAGs
           healthChecks:
             - protocol: "TCP"
@@ -251,11 +247,8 @@
             #   timeoutSeconds: 20
             #   maxConsecutiveFailures: 3
             #   ignoreHttp1xx: false
-          residency:
-            taskLostBehavior: "WAIT_FOREVER"
           upgradeStrategy:
             minimumHealthCapacity: 0.5
-            maximumOverCapacity: 0
           labels:
             subdomain: '/airflow/worker'
             HAPROXY_GROUP: external

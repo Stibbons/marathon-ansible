@@ -10,10 +10,10 @@
           - id: 'apigateway'
             cpus: 1
             mem: 512
-            instances: 1
+            instances: 2
             env:
               LOG_LEVEL: 'info'
-              MARATHON_HOST: 'http://tlsisbld126l.tl.{{ domain_ext }}:5050'
+              MARATHON_HOST: 'http://tlsisbld126l.tl.:5050'
             container:
               type: DOCKER
               docker:
@@ -23,10 +23,10 @@
                     - containerPort: 80
                       protocol: tcp
                       servicePort: "{{ servicePorts.api_gateway }}"
-              volumes:
-                - containerPath: '/var/tmp/apigateway'
-                  hostPath: '/var/tmp/apigateway'
-                  mode: RO
+              # volumes:
+              #   - containerPath: '/var/tmp/apigateway'
+              #     hostPath: '/var/tmp/apigateway'
+              #     mode: RO
             healthChecks:
               - path: /health-check
                 portIndex: 0
@@ -40,11 +40,13 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Host:apigateway.forestscribe.{{ domain_ext }}"
+              traefik.frontend.rule: "Host:apigateway.{{ sub_domain }}"
             constraints:
-              - - hostname
-                - LIKE
-                - tlsisbld127l.tl.{{ domain_ext }}
+              - ["hostname", "GROUP_BY"]
+              - ["hostname", "LIKE", "tlsisbld127l.tl.{{ top_domain }}|tlsisbld125l.tl.{{ top_domain }}"]
+            upgradeStrategy:
+              minimumHealthCapacity: 0.5
+              maximumOverCapacity: 0.5
 
           - id: couchdb
             cpus: 1

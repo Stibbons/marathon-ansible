@@ -98,6 +98,7 @@
                   protocol: tcp
                   servicePort: "{{ servicePorts.neo4j }}"
                 - containerPort: 7687
+                  hostPort: 7687 # Freeze port for redirection
                   protocol: tcp
                   servicePort: "{{ servicePorts.neo4jbolt }}"
             residency:
@@ -110,7 +111,8 @@
               HAPROXY_BIND_ADDR: 172.17.0.1
               subdomain: 'neo3j'
               traefik.enable: "true"
-              traefik.frontend.rule: "Host:neo3j.forestscribe.{{ domain_ext }}"
+              traefik.frontend.rule: "Host:neo4j.{{ sub_domain }},neo3j.{{ sub_domain }}"
+              traefik.frontend.entryPoints: "http,https,wss"
             env:
                 NEO4J_AUTH: none
             healthChecks:

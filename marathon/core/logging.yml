@@ -97,7 +97,7 @@
                     labels:
                       subdomain: 'kibana'
                       traefik.enable: "true"
-                      traefik.frontend.rule: "Host:kibana.forestscribe.{{ domain_ext }}"
+                      traefik.frontend.rule: "Host:kibana.{{ sub_domain }}"
                     env:
                         PORT: "5601"
                         ELASTICSEARCH_URL: "http://{{docker_ip}}:{{ servicePorts.elasticsearch }}"

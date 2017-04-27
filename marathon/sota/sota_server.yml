@@ -229,7 +229,7 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Host:ota.forestscribe.{{ domain_ext }}"
+              traefik.frontend.rule: "Host:ota.{{ sub_domain }}"
             env:
                 HOST: "0.0.0.0"
                 PORT: "9000"

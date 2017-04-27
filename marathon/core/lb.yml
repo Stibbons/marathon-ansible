@@ -77,7 +77,7 @@
             instances: 0 # "{{ marathon_num_agents }}"
             constraints:
               - [ "hostname", "UNIQUE" ]
-              - [ "hostname", "UNLIKE", "tlsisbld127l.tl.{{ domain_ext }}"]
+              - [ "hostname", "UNLIKE", "tlsisbld127l.tl."]
             container:
               type: DOCKER
               docker:

@@ -11,13 +11,13 @@ ansible playbook and tools to run Forestscribe infra in marathon
 
 To populate zk with the ansible vault (only need to be done once, or when new infra configuration is to be done):
 
-    cat 'XXX' > ~/.vault-password.forestscribe  # get this file from pierre
+    echo 'XXX' > ~/.vault-password.forestscribe  # get this file from pierre (ask him twice)
     export ZK_HOST=<zk_host>:<zk_port>
-    ansible-playbook zk_populate.yml --vault-password-file=~/.vault-password.forestscribe
+    pipenv run ansible-vault --vault-password-file=~/p -vvvv edit zk_init_file.yml
+    pipenv run ansible-playbook zk_populate.yml --vault-password-file=~/.vault-password.forestscribe
 
 For Traefik related:
 
-    export DOMAIN_EXT=<domainserver.ext>
     export ZK_HOST=<zk_host>:<zk_port>
     pipenv install --ignore-hashes
     pipenv run ansible-playbook marathon/traefik.yml

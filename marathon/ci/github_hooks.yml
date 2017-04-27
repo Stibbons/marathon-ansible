@@ -36,7 +36,7 @@
               subdomain: '/github_hooks'
               upstream_name: 'github_hooks'
               traefik.enable: "true"
-              traefik.frontend.rule: "Host:github_hooks.forestscribe.{{ domain_ext }}"
+              traefik.frontend.rule: "Host:github_hooks.{{ sub_domain }}"
 
             healthChecks:
             - "{{ basic_http_health_check }}"

@@ -78,15 +78,19 @@ servicePorts:
 
     traefik_admin:            30300
     traefik_http:             30301
+    traefik_https:            30302
 
     api_gateway:              30310
 
 
+traefik_admin_port:     19050
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zk_host }}"
 zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
-domain_ext: "{{ ansible_env.DOMAIN_EXT }}"
+top_domain: "{{ zk.cloud.top_domain }}"
+sub_domain: "{{ zk.cloud.sub_domain }}"
+sub_domain:: "{{ zk.cloud.sub_domain: }}"
 
 zookeeper_worker_path: "{{ zookeeper_uri }}/workers/ids/"
 

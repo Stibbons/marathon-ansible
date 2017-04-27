@@ -14,38 +14,38 @@
           disk: 0
           instances: 1
           container:
-              type: DOCKER
-              volumes:
-                  -   containerPath: "pgdata"
-                      mode: "RW"
-                      persistent:
-                          type: "root"
-                          size: 4096
-              docker:
-                  image: postgres:9.4
-                  network: BRIDGE
-                  privileged: false
-                  parameters: "{{ docker_log_driver_parameters }}"
-                  forcePullImage: false
-                  portMappings:
-                      -   containerPort: 5432
-                          protocol: tcp
-                          servicePort: "{{ servicePorts.airflow_pg }}"
+            type: DOCKER
+            volumes:
+              - containerPath: "pgdata"
+                mode: "RW"
+                persistent:
+                  type: "root"
+                  size: 4096
+            docker:
+              image: postgres:9.4
+              network: BRIDGE
+              privileged: false
+              parameters: "{{ docker_log_driver_parameters }}"
+              forcePullImage: false
+              portMappings:
+                - containerPort: 5432
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.airflow_pg }}"
           residency:
-              taskLostBehavior: "WAIT_FOREVER"
+            taskLostBehavior: "WAIT_FOREVER"
           upgradeStrategy:
-              minimumHealthCapacity: 0.5
-              maximumOverCapacity: 0
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0 # mandatory for resident app
           labels:
-              HAPROXY_GROUP: external
-              HAPROXY_BIND_ADDR: 172.17.0.1
+            HAPROXY_GROUP: external
+            HAPROXY_BIND_ADDR: 172.17.0.1
           env:
-              POSTGRES_PASSWORD: "airflow"
-              POSTGRES_USER: "airflow"
-              POSTGRES_DB: "airflow"
-              PGDATA: "/mnt/mesos/sandbox/pgdata"
+            POSTGRES_USER: "{{ zk.secrets.airflow_postgres_user }}"
+            POSTGRES_PASSWORD: "{{ zk.secrets.airflow_postgres_password }}"
+            POSTGRES_DB: "airflow"
+            PGDATA: "/mnt/mesos/sandbox/pgdata"
           healthChecks:
-              -   "{{ basic_tcp_health_check }}"
+            - "{{ basic_tcp_health_check }}"
 
         - id: "redis"
           cmd:
@@ -71,5 +71,8 @@
             HAPROXY_BIND_ADDR: 172.17.0.1
           env:
             REDIS_PASS: airflow
+          upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0 # mandatory for resident app
           healthChecks:
             - "{{ basic_tcp_health_check }}"

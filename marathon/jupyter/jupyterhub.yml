@@ -54,4 +54,4 @@
             HAPROXY_GROUP: external
             HAPROXY_BIND_ADDR: 172.17.0.1
             traefik.enable: "true"
-            traefik.frontend.rule: "Host:jupyter.t.forestscribe.{{ domain_ext }}"
+            traefik.frontend.rule: "Host:jupyter.{{ sub_domain }}"

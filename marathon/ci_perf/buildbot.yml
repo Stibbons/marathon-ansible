@@ -52,8 +52,7 @@
               subdomain: '/ci_perf_buildbot/'
               upstream_name: 'ci_perf_buildbot'
               traefik.enable: "true"
-              traefik.frontend.rule: "Path:/ci_perf_buildbot"
-
+              traefik.frontend.rule: "PathPrefixStrip:/ci_perf_buildbot"
             healthChecks:
             - "{{ basic_http_health_check }}"
 
