@@ -90,7 +90,6 @@ zookeeper_uri: "zk://{{ zk_host }}"
 zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
 top_domain: "{{ zk.cloud.top_domain }}"
 sub_domain: "{{ zk.cloud.sub_domain }}"
-sub_domain:: "{{ zk.cloud.sub_domain: }}"
 
 zookeeper_worker_path: "{{ zookeeper_uri }}/workers/ids/"
 
