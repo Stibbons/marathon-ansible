@@ -1,0 +1,82 @@
+- name: "Deploy OpenWhisk"
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: openwhisk
+    group_json:
+      dependencies:
+        - /core/lb
+        - /core/logging
+      apps:
+          - id: 'apigateway'
+            cpus: 1
+            mem: 512
+            instances: 2
+            env:
+              LOG_LEVEL: 'info'
+              MARATHON_HOST: 'http://tlsisbld126l.tl.:5050'
+            container:
+              type: DOCKER
+              docker:
+                image: 'adobeapiplatform/apigateway:1.1.0'
+                network: BRIDGE
+                portMappings:
+                    - containerPort: 80
+                      protocol: tcp
+                      servicePort: "{{ servicePorts.api_gateway }}"
+              # volumes:
+              #   - containerPath: '/var/tmp/apigateway'
+              #     hostPath: '/var/tmp/apigateway'
+              #     mode: RO
+            healthChecks:
+              - path: /health-check
+                portIndex: 0
+                protocol: HTTP
+                gracePeriodSeconds: 120
+                intervalSeconds: 15
+                timeoutSeconds: 10
+                maxConsecutiveFailures: 2
+            labels:
+              subdomain: 'apigateway'
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1
+              traefik.enable: "true"
+              traefik.frontend.rule: "Host:apigateway.{{ sub_domain }}"
+            constraints:
+              - ["hostname", "GROUP_BY"]
+              - ["hostname", "LIKE", "tlsisbld127l.tl.{{ top_domain }}|tlsisbld125l.tl.{{ top_domain }}"]
+            upgradeStrategy:
+              minimumHealthCapacity: 0.5
+              maximumOverCapacity: 0.5
+
+          - id: couchdb
+            cpus: 1
+            mem: 1024
+            instances: 1
+            env:
+              COUCHDB_USER: 'couchdb'
+              COUCHDB_PASSWORD: 'couchdb'
+            container:
+              type: DOCKER
+              docker:
+                image: 'adobeapiplatform/whisk-couchdb'
+                network: BRIDGE
+                portMappings:
+                  - containerPort: 5984
+                    hostPort: 5984
+                    servicePort: 0
+                    protocol: tcp
+              volumes:
+                - containerPath: /usr/local/var/lib/couchdb
+                  hostPath: ~/openwhisk/couchdb
+                  mode: RW
+            healthChecks:
+              - path: /_stats
+                protocol: HTTP
+                gracePeriodSeconds: 30
+                intervalSeconds: 60
+                timeoutSeconds: 20
+                maxConsecutiveFailures: 3
+            labels:
+              subdomain: '/openwhisk/couchdb'
+              HAPROXY_GROUP: external
+              HAPROXY_BIND_ADDR: 172.17.0.1

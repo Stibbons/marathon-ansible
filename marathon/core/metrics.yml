@@ -79,6 +79,8 @@
                   HAPROXY_BIND_ADDR: 172.17.0.1
                   subdomain: '/grafana/'
                   upstream_name: 'grafana'
+                  traefik.enable: "true"
+                  traefik.frontend.rule: "Path:/grafana"
                 env:
                     GF_SERVER_ROOT_URL: "{{ nginx_external_url }}/grafana/"
                     GF_SERVER_DOMAIN: "{{ nginx_external_url | host_from_url }}"
@@ -141,6 +143,8 @@
                   HAPROXY_BIND_ADDR: 172.17.0.1
                   subdomain: '/influxdb/'
                   upstream_name: 'influxdb'
+                  traefik.enable: "true"
+                  traefik.frontend.rule: "Path:/influxdb"
 
                 uris:
                     - "{{ influxdb_conf_url }}"

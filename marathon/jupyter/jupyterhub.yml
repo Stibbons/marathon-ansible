@@ -1,0 +1,57 @@
+- name: "Deploy Jupyterhub"
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: jupyter/hub
+    group_json:
+      dependencies:
+        - /core/lb
+        - /core/logging
+      apps:
+        - id: "jupyterhub"
+          cpus: 1
+          mem: 512
+          disk: 0
+          instances: 1
+          # args: []
+          container:
+            type: DOCKER
+            volumes:
+              - hostPath: jupyterhub
+                containerPath: /home
+                mode: RW
+              - containerPath: "jupyterhub"
+                mode: "RW"
+                persistent:
+                  type: "root"
+                  size: 1024
+            docker:
+              image: "stibbons31/jupyterhub"
+              network: BRIDGE
+              privileged: false
+              parameters: "{{ docker_log_driver_parameters }}"
+              forcePullImage: true
+              portMappings:
+                  - containerPort: 8000
+                    protocol: tcp
+                    servicePort: "{{ servicePorts.jupyterhub }}"
+          env:
+          healthChecks:
+            - path: "/"
+              protocol: "HTTP"
+              portIndex: 0
+              gracePeriodSeconds: 300
+              intervalSeconds: 60
+              timeoutSeconds: 20
+              maxConsecutiveFailures: 3
+              ignoreHttp1xx: false
+          residency:
+            taskLostBehavior: "WAIT_FOREVER"
+          upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0
+          labels:
+            subdomain: '/jupyter/hub'
+            HAPROXY_GROUP: external
+            HAPROXY_BIND_ADDR: 172.17.0.1
+            traefik.enable: "true"
+            traefik.frontend.rule: "Host:jupyter.{{ sub_domain }}"

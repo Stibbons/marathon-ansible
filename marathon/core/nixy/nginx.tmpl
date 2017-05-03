@@ -129,7 +129,7 @@ http {
         ssl_session_cache      shared:SSL:1440m;
         ssl_session_timeout  1440m;
 
-        server_name {{.}} {{.}}.intel.com {{.}}.forestscribe.intel.com;
+        server_name {{.}} {{.}}.intel.com {{.}}.{{ sub_domain }}";
         proxy_set_header HOST $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

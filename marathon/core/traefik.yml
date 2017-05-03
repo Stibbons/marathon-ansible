@@ -1,0 +1,106 @@
+- vars:
+    traefik_conf_path: "/etc/traefik/traefik.toml"
+    traefik_conf_url: "{{ zk_http_url }}/{{ traefik_conf_path }}"
+
+  block:
+    - name: upload traefik conf in zk
+      znode:
+        hosts: "{{ zk_host }}"
+        name: "{{ traefik_conf_path }}"
+        value: "{{ lookup('template', 'traefik/traefik.toml') }}"
+        state: present
+
+    - name: "Deploy Traefik Reverse Proxy"
+      marathon:
+        marathon_uri: "{{ marathon_uri }}"
+        group_id: traefik/
+        group_json:
+          dependencies:
+            - /core/lb
+            - /core/logging
+          apps:
+            - id: "router"
+              cpus: 2
+              mem: 512
+              disk: 0
+              instances: 2
+              args:
+                - "--logLevel=DEBUG"
+                - "--configfile=/mnt/mesos/sandbox/traefik.toml"
+              ports: [80, 443, "{{ traefik_admin_port }}"]
+              container:
+                type: DOCKER
+                docker:
+                  # image: "traefik"
+                  image: stibbons31/traefik-workaround-marathon-bad-gateway:workaround_marathon_bad_gateway
+                  network: "HOST"
+                  # network: "BRIDGE"
+                  privileged: true
+                  parameters: "{{ docker_log_driver_parameters }}"
+                  forcePullImage: true
+                  # portMappings:
+                  #   - containerPort: 80
+                  #     protocol: tcp
+                  #     hostPort: 80
+                  #     name: "http"
+                  #     servicePort: "{{ servicePorts.traefik_http }}"
+                  #   - containerPort: 443
+                  #     protocol: tcp
+                  #     hostPort: 443
+                  #     name: "https"
+                  #     servicePort: "{{ servicePorts.traefik_https }}"
+                  #   - containerPort: {{ traefik_admin_port }}
+                  #     # hostPort: {{ traefik_admin_port }} # do not fix this port, it will prevent future deploy
+                  #     protocol: tcp
+                  #     name: "admin"
+                  #     servicePort: "{{ servicePorts.traefik_admin }}"
+                volumes:
+                  - containerPath: "/log"
+                    hostPath: "log"
+                    mode: "RW"
+              portDefinitions:
+                - port: 80
+                  hostPort: 80
+                  protocol: "tcp"
+                  name: "http"
+                - port: 443
+                  hostPort: 443
+                  protocol: "tcp"
+                  name: "https"
+                - port: "{{ traefik_admin_port }}"
+                  hostPort: "{{ traefik_admin_port }}"
+                  protocol: "tcp"
+                  name: "admin"
+              env:
+                https_proxy: "{{zk.proxy_env.https_proxy}}"
+                HTTPS_PROXY: "{{zk.proxy_env.https_proxy}}"
+                http_proxy: "{{zk.proxy_env.http_proxy}}"
+                HTTP_PROXY: "{{zk.proxy_env.http_proxy}}"
+                no_proxy: "{{zk.proxy_env.no_proxy}}"
+                NO_PROXY: "{{zk.proxy_env.no_proxy}}"
+                ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
+              healthChecks:
+                # Need recent version of marathon
+                # - path: "/health"
+                #   protocol: "HTTP"
+                #   port: {{ traefik_admin_port }}
+                #   gracePeriodSeconds: 300
+                #   intervalSeconds: 60
+                #   maxConsecutiveFailures: 3
+              upgradeStrategy:
+                minimumHealthCapacity: 0.4
+                maximumOverCapacity: 0
+              labels:
+                HAPROXY_GROUP: external
+                HAPROXY_BIND_ADDR: 172.17.0.1
+                traefik.enable: "false"
+              constraints:
+                - - hostname
+                  - UNIQUE # GROUP_BY not applicable since using HOST network
+                - - hostname
+                  - LIKE
+                  - tlsisbld127l.tl.{{ top_domain }}|tlsisbld125l.tl.{{ top_domain }}
+              uris:
+                  - "{{ traefik_conf_url }}"
+                  - "{{ zk_http_url }}/certs/forestscribe.crt"
+                  - "{{ zk_http_url }}/certs/forestscribe.key"

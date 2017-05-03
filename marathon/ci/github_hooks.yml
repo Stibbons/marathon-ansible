@@ -1,7 +1,7 @@
 - name: Deploy github_hooks
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    group_id: ci/buildbot
+    group_id: ci/githubhooks
     group_json:
         dependencies:
             - /core/lb
@@ -35,6 +35,8 @@
               HAPROXY_BIND_ADDR: "172.17.0.1"
               subdomain: '/github_hooks'
               upstream_name: 'github_hooks'
+              traefik.enable: "true"
+              traefik.frontend.rule: "Host:github_hooks.{{ sub_domain }}"
 
             healthChecks:
             - "{{ basic_http_health_check }}"

@@ -50,6 +50,7 @@ servicePorts:
     sota_ldap:            30105
     sota_webserver:       30106
 
+
     st_buildbot_www:     30130
     st_buildbot_worker:  30131
 
@@ -62,14 +63,34 @@ servicePorts:
 
     ci_perf_buildbot_www:     30230
     ci_perf_buildbot_worker:  30231
-    ci_perf_postgres:               30232
+    ci_perf_postgres:         30232
     ci_perf_crossbar:         30233
 
+    airflow_mesos_backend:           30234
+    airflow_mesos_flower:            30235
+    airflow_celery_backend:          30236
+    airflow_celery_flower:           30237
+    airflow_celery_worker_log:       30238
+    airflow_pg:                      30239
+    airflow_redis:                   30240
 
+    jupyterhub:               30250
+
+    traefik_admin:            30300
+    traefik_http:             30301
+    traefik_https:            30302
+
+    api_gateway:              30310
+
+
+traefik_admin_port:     19050
 
 zk_host: "{{ ansible_env.ZK_HOST }}"
 zookeeper_uri: "zk://{{ zk_host }}"
 zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
+top_domain: "{{ zk.cloud.top_domain }}"
+sub_domain: "{{ zk.cloud.sub_domain }}"
+sub_domain:: "{{ zk.cloud.sub_domain: }}"
 
 zookeeper_worker_path: "{{ zookeeper_uri }}/workers/ids/"
 

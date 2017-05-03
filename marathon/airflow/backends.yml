@@ -1,0 +1,78 @@
+- name: "Deploy DB services for Airflow"
+  marathon:
+    marathon_uri: "{{ marathon_uri }}"
+    group_id: airflow/backends
+    group_json:
+      dependencies:
+        - /core/lb
+        - /core/logging
+      apps:
+        - id: "pg"
+          cmd:
+          cpus: 8
+          mem: 1024
+          disk: 0
+          instances: 1
+          container:
+            type: DOCKER
+            volumes:
+              - containerPath: "pgdata"
+                mode: "RW"
+                persistent:
+                  type: "root"
+                  size: 4096
+            docker:
+              image: postgres:9.4
+              network: BRIDGE
+              privileged: false
+              parameters: "{{ docker_log_driver_parameters }}"
+              forcePullImage: false
+              portMappings:
+                - containerPort: 5432
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.airflow_pg }}"
+          residency:
+            taskLostBehavior: "WAIT_FOREVER"
+          upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0 # mandatory for resident app
+          labels:
+            HAPROXY_GROUP: external
+            HAPROXY_BIND_ADDR: 172.17.0.1
+          env:
+            POSTGRES_USER: "{{ zk.secrets.airflow_postgres_user }}"
+            POSTGRES_PASSWORD: "{{ zk.secrets.airflow_postgres_password }}"
+            POSTGRES_DB: "airflow"
+            PGDATA: "/mnt/mesos/sandbox/pgdata"
+          healthChecks:
+            - "{{ basic_tcp_health_check }}"
+
+        - id: "redis"
+          cmd:
+          cpus: 2
+          mem: 512
+          disk: 0
+          instances: 1
+          container:
+            type: DOCKER
+            volumes: []
+            docker:
+              image: redis:alpine
+              network: BRIDGE
+              privileged: false
+              parameters: "{{ docker_log_driver_parameters }}"
+              forcePullImage: false
+              portMappings:
+                - containerPort: 6379
+                  protocol: tcp
+                  servicePort: "{{ servicePorts.airflow_redis }}"
+          labels:
+            HAPROXY_GROUP: external
+            HAPROXY_BIND_ADDR: 172.17.0.1
+          env:
+            REDIS_PASS: airflow
+          upgradeStrategy:
+            minimumHealthCapacity: 0.5
+            maximumOverCapacity: 0 # mandatory for resident app
+          healthChecks:
+            - "{{ basic_tcp_health_check }}"

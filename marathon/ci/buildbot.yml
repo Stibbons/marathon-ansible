@@ -54,6 +54,8 @@
               HAPROXY_BIND_ADDR: "172.17.0.1"
               subdomain: 'buildbot'
               upstream_name: 'buildbot'
+              traefik.enable: "true"
+              traefik.frontend.rule: "Host:buildbot.{{ sub_domain }}"
 
             healthChecks:
             - "{{ basic_http_health_check }}"

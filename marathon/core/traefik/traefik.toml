@@ -1,0 +1,353 @@
+# traefik.toml
+################################################################
+# Global configuration
+################################################################
+
+# Timeout in seconds.
+# Duration to give active requests a chance to finish during hot-reloads
+#
+# Optional
+# Default: 10
+#
+# graceTimeOut = 10
+
+# Enable debug mode
+#
+# Optional
+# Default: false
+#
+debug = true
+
+# Periodically check if a new version has been released
+#
+# Optional
+# Default: true
+#
+# checkNewVersion = false
+
+# Traefik logs file
+# If not defined, logs to stdout
+#
+# Optional
+#
+traefikLogsFile = "log/traefik.log"
+
+# Access logs file
+#
+# Optional
+#
+accessLogsFile = "log/access.log"
+
+# Log level
+#
+# Optional
+# Default: "ERROR"
+# Accepted values, in order of severity: "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "PANIC"
+# Messages at and above the selected level will be logged.
+#
+logLevel = "DEBUG"
+
+# Backends throttle duration: minimum duration in seconds between 2 events from providers
+# before applying a new configuration. It avoids unnecessary reloads if multiples events
+# are sent in a short amount of time.
+#
+# Optional
+# Default: "2"
+#
+# ProvidersThrottleDuration = "5"
+
+# Controls the maximum idle (keep-alive) connections to keep per-host. If zero, DefaultMaxIdleConnsPerHost
+# from the Go standard library net/http module is used.
+# If you encounter 'too many open files' errors, you can either increase this
+# value or change the `ulimit`.
+#
+# Optional
+# Default: 200
+#
+# MaxIdleConnsPerHost = 200
+
+# If set to true invalid SSL certificates are accepted for backends.
+# Note: This disables detection of man-in-the-middle attacks so should only be used on secure backend networks.
+# Optional
+# Default: false
+#
+# InsecureSkipVerify = true
+
+# Entrypoints to be used by frontends that do not specify any entrypoint.
+# Each frontend can specify its own entrypoints.
+#
+# Optional
+# Default: ["http"]
+#
+defaultEntryPoints = ["http", "https"]
+
+
+
+################################################################
+# Web configuration backend
+################################################################
+
+# Enable web configuration backend
+#
+# Optional
+#
+[web]
+
+# Web administration port
+#
+# Required
+#
+address = ":{{ traefik_admin_port }}"
+
+# SSL certificate and key used
+#
+# Optional
+#
+# CertFile = "traefik.crt"
+# KeyFile = "traefik.key"
+#
+# Set REST API to read-only mode
+#
+# Optional
+# ReadOnly = false
+
+
+################################################################
+# Entrypoints definition
+################################################################
+#
+# Optional
+# Default:
+# [entryPoints]
+#   [entryPoints.http]
+#   address = ":80"
+#
+# To redirect an http entrypoint to an https entrypoint (with SNI support):
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+    compress = true
+    [entryPoints.http.redirect]
+      entryPoint = "https"
+
+  [entryPoints.https]
+    address = ":443"
+    compress = true
+    [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+      CertFile = "/mnt/mesos/sandbox/forestscribe.crt"
+      KeyFile = "/mnt/mesos/sandbox/forestscribe.key"
+
+  [entryPoints.wss]
+    address = ":7687"
+    [entryPoints.wss.tls]
+      [[entryPoints.wss.tls.certificates]]
+        CertFile = "/mnt/mesos/sandbox/forestscribe.crt"
+        KeyFile = "/mnt/mesos/sandbox/forestscribe.key"
+
+
+#
+# To redirect an entrypoint rewriting the URL:
+# [entryPoints]
+#   [entryPoints.http]
+#   address = ":80"
+#     [entryPoints.http.redirect]
+#       regex = "^http://localhost/(.*)"
+#       replacement = "http://mydomain/$1"
+#
+# Only accept clients that present a certificate signed by a specified
+# Certificate Authority (CA)
+# ClientCAFiles can be configured with multiple CA:s in the same file or
+# use multiple files containing one or several CA:s. The CA:s has to be in PEM format.
+# All clients will be required to present a valid cert.
+# The requirement will apply to all server certs in the entrypoint
+# In the example below both snitest.com and snitest.org will require client certs
+#
+# [entryPoints]
+#   [entryPoints.https]
+#   address = ":443"
+#   [entryPoints.https.tls]
+#   ClientCAFiles = ["tests/clientca1.crt", "tests/clientca2.crt"]
+#     [[entryPoints.https.tls.certificates]]
+#     CertFile = "integration/fixtures/https/snitest.com.cert"
+#     KeyFile = "integration/fixtures/https/snitest.com.key"
+#     [[entryPoints.https.tls.certificates]]
+#     CertFile = "integration/fixtures/https/snitest.org.cert"
+#     KeyFile = "integration/fixtures/https/snitest.org.key"
+#
+# To enable basic auth on an entrypoint
+# with 2 user/pass: test:test and test2:test2
+# Passwords can be encoded in MD5, SHA1 and BCrypt: you can use htpasswd to generate those ones
+# [entryPoints]
+#   [entryPoints.http]
+#   address = ":80"
+#   [entryPoints.http.auth.basic]
+#   users = ["test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/", "test2:$apr1$d9hr9HBB$4HxwgUir3HP4EsggP/QNo0"]
+#
+# To enable digest auth on an entrypoint
+# with 2 user/realm/pass: test:traefik:test and test2:traefik:test2
+# You can use htdigest to generate those ones
+# [entryPoints]
+#   [entryPoints.http]
+#   address = ":80"
+#   [entryPoints.http.auth.basic]
+#   users = ["test:traefik:a2688e031edb4be6a3797f3882655c05 ", "test2:traefik:518845800f9e2bfb1f1f740ec24f074e"]
+#
+# To specify an https entrypoint with a minimum TLS version, and specifying an array of cipher suites (from crypto/tls):
+# [entryPoints]
+#   [entryPoints.https]
+#   address = ":443"
+#     [entryPoints.https.tls]
+#     MinVersion = "VersionTLS12"
+#     CipherSuites = ["TLS_RSA_WITH_AES_256_GCM_SHA384"]
+#       [[entryPoints.https.tls.certificates]]
+#       CertFile = "integration/fixtures/https/snitest.com.cert"
+#       KeyFile = "integration/fixtures/https/snitest.com.key"
+#       [[entryPoints.https.tls.certificates]]
+#       CertFile = "integration/fixtures/https/snitest.org.cert"
+#       KeyFile = "integration/fixtures/https/snitest.org.key"
+
+# To enable compression support using gzip format:
+# [entryPoints]
+#   [entryPoints.http]
+#   address = ":80"
+#   compress = true
+
+
+################################################################
+# Mesos/Marathon configuration backend
+################################################################
+
+# Enable Marathon configuration backend
+#
+# Optional
+#
+[marathon]
+
+# Marathon server endpoint.
+# You can also specify multiple endpoint for Marathon:
+# endpoint := "http://10.241.1.71:8080,10.241.1.72:8080,10.241.1.73:8080"
+#
+# Required
+#
+endpoint = "http://tlsisbld126l.tl.{{ top_domain }}:8080"
+
+# Enable watch Marathon changes
+#
+# Optional
+#
+watch = true
+
+# Default domain used.
+#
+# Required
+#
+domain = "{{ sub_domain }}"
+
+# Override default configuration template. For advanced users :)
+#
+# Optional
+#
+# filename = "marathon.tmpl"
+
+# Expose Marathon apps by default in traefik
+#
+# Optional
+# Default: true
+#
+exposedByDefault = false
+
+# Convert Marathon groups to subdomains
+# Default behavior: /foo/bar/myapp => foo-bar-myapp.{defaultDomain}
+# with groupsAsSubDomains enabled: /foo/bar/myapp => myapp.bar.foo.{defaultDomain}
+#
+# Optional
+# Default: false
+#
+# groupsAsSubDomains = true
+
+# Enable compatibility with marathon-lb labels
+#
+# Optional
+# Default: false
+#
+marathonLBCompatibility = true
+
+# Enable Marathon basic authentication
+#
+# Optional
+#
+#  [marathon.basic]
+#  httpBasicAuthUser = "foo"
+#  httpBasicPassword = "bar"
+
+# TLS client configuration. https://golang.org/pkg/crypto/tls/#Config
+#
+# Optional
+#
+# [marathon.TLS]
+# CA = "/etc/ssl/ca.crt"
+# Cert = "/etc/ssl/marathon.cert"
+# Key = "/etc/ssl/marathon.key"
+# InsecureSkipVerify = true
+
+# DCOSToken for DCOS environment, This will override the Authorization header
+#
+# Optional
+#
+# dcosToken = "xxxxxx"
+
+# Override DialerTimeout
+# Amount of time in seconds to allow the Marathon provider to wait to open a TCP
+# connection to a Marathon master
+#
+# Optional
+# Default: 60
+# dialerTimeout = 5
+
+# Set the TCP Keep Alive interval (in seconds) for the Marathon HTTP Client
+#
+# Optional
+# Default: 10
+#
+# keepAlive = 10
+
+[file]
+
+# rules
+[backends]
+  [backends.backend_marathon]
+    [backends.backend_marathon.circuitbreaker]
+      expression = "NetworkErrorRatio() > 0.5"
+    [backends.backend_marathon.servers.server1]
+    url = "http://tlsisbld126l.tl.{{ top_domain }}:8080"
+    weight = 10
+  [backends.backend_mesos]
+    [backends.backend_mesos.circuitbreaker]
+      expression = "NetworkErrorRatio() > 0.5"
+    [backends.backend_mesos.servers.server1]
+      url = "http://tlsisbld126l.tl.{{ top_domain }}:5050"
+      weight = 10
+  [backends.backend_traefik]
+    [backends.backend_traefik.circuitbreaker]
+      expression = "NetworkErrorRatio() > 0.5"
+    [backends.backend_traefik.servers.server1]
+      url = "http://tlsisbld127l.tl.{{ top_domain }}:{{ traefik_admin_port }}"
+      weight = 10
+
+[frontends]
+  [frontends.frontend_marathon]
+    backend = "backend_marathon"
+    [frontends.frontend_marathon.routes.route1]
+      rule = "Host:marathon.{{ sub_domain }}"
+      port = 80
+  [frontends.frontend_mesos]
+    backend = "backend_mesos"
+    [frontends.frontend_mesos.routes.route1]
+      rule = "Host:mesos.{{ sub_domain }}"
+      port = 80
+  [frontends.frontend_traefik]
+    backend = "backend_traefik"
+    [frontends.frontend_traefik.routes.route1]
+      rule = "Host:traefik.{{ sub_domain }}"
+      port = 80
