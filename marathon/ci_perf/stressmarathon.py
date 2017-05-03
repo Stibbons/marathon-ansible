@@ -6,6 +6,7 @@ import argh
 import requests
 from kazoo.client import KazooClient
 from requests.packages import urllib3
+from multiprocessing.dummy import Pool as ThreadPool
 
 urllib3.disable_warnings()
 ZK_HOST = os.environ["ZK_HOST"]
@@ -109,8 +110,11 @@ def main(num_builds, num_workers, num_masters, config_kind, numlines, sleep, fir
     waitMaster()
     print "create {} build".format(num_builds)
     start = time.time()
-    for i in xrange(num_builds):
-        r = requests.post(
+    pool = ThreadPool(num_builds)
+    session = requests.Session()
+
+    def start_build(x):
+        r = session.post(
             url + "api/v2/forceschedulers/force",
             json={"id": 1, "jsonrpc": "2.0", "method": "force", "params": {
                 "builderNames": ['runtests' + str(num_workers)], "username": "", "reason": "force build",
@@ -119,6 +123,7 @@ def main(num_builds, num_workers, num_masters, config_kind, numlines, sleep, fir
                 "SLEEP": str(sleep)}}, verify=False)
         r.raise_for_status()
         print "force result: ", r.status_code, r.content
+    pool.map(start_build, range(num_builds))
     finished = False
     builds = []
     latencies = []
