@@ -91,6 +91,7 @@ zookeeper_uri: "zk://{{ zk_host }}"
 zookeeper_etc_uri: "{{ zookeeper_uri }}/etc"
 top_domain: "{{ zk.cloud.top_domain }}"
 sub_domain: "{{ zk.cloud.sub_domain }}"
+sub_domain:: "{{ zk.cloud.sub_domain: }}"
 
 zookeeper_worker_path: "{{ zookeeper_uri }}/workers/ids/"
 
@@ -99,7 +100,6 @@ marathon_num_agents: "5" #{{ zk.cloud.mesos_num_agents}}"
 
 # config files can be downloaded via marathon_uri using this service (see influxdb for an example)
 zk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
-gzk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
 
 
 marathon_uri: "{{ zk.cloud.marathon_uri }}"
