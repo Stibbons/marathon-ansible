@@ -39,6 +39,7 @@
                 BUILDBOT_DB_URL: postgresql+psycopg2://{{POSTGRES_USER}}:{{POSTGRES_PASSWORD}}@{{docker_ip}}:{{servicePorts.ci_perf_postgres}}/{{POSTGRES_DB}}
                 BUILDBOT_MQ_URL: ws://{{docker_ip}}:{{servicePorts.ci_perf_crossbar}}/ws
                 BUILDBOT_MQ_REALM: realm1
+                BUILDBOT_MQ_DEBUG: 'error'
                 NUM_WORKER: '300'
                 https_proxy: "{{zk.proxy_env.https_proxy}}"
                 http_proxy: "{{zk.proxy_env.http_proxy}}"
