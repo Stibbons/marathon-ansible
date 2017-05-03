@@ -126,13 +126,13 @@ address = ":{{ traefik_admin_port }}"
 [entryPoints]
   [entryPoints.http]
     address = ":80"
-    compress = true
+    compress = false
     [entryPoints.http.redirect]
       entryPoint = "https"
 
   [entryPoints.https]
     address = ":443"
-    compress = true
+    compress = false
     [entryPoints.https.tls]
       [[entryPoints.https.tls.certificates]]
       CertFile = "/mnt/mesos/sandbox/forestscribe.crt"

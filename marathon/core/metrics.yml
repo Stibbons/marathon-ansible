@@ -1,6 +1,6 @@
 - vars:
     influxdb_conf_path: "/etc/influxdb/influxdb.conf"
-    influxdb_conf_url: "{{ zk_http_url }}/{{ influxdb_conf_path }}"
+    influxdb_conf_url: "{{ zk_http_url }}{{ influxdb_conf_path }}"
 
   block:
     - name: upload influxdb conf in zk
@@ -38,7 +38,7 @@
                     network: BRIDGE
                     privileged: true
                     parameters: "{{ docker_log_driver_parameters }}"
-                    forcePullImage: true
+                    forcePullImage: false
                 env:
                     INFLUXDB_URL: http://{{docker_ip}}:{{servicePorts.influxdb}}
                     INFLUXDB_DATABASE: mesos_docker
@@ -77,13 +77,11 @@
                 labels:
                   HAPROXY_GROUP: external
                   HAPROXY_BIND_ADDR: 172.17.0.1
-                  subdomain: '/grafana/'
-                  upstream_name: 'grafana'
                   traefik.enable: "true"
-                  traefik.frontend.rule: "Path:/grafana"
+                  traefik.frontend.rule: "Host:grafana.{{ sub_domain }}"
                 env:
-                    GF_SERVER_ROOT_URL: "{{ nginx_external_url }}/grafana/"
-                    GF_SERVER_DOMAIN: "{{ nginx_external_url | host_from_url }}"
+                    GF_SERVER_ROOT_URL: "https://grafana.{{ sub_domain }}"
+                    GF_SERVER_DOMAIN: "grafana.{{ sub_domain }}"
                     GF_SERVER_ENFORCE_DOMAIN: "true"
                     GF_SECURITY_ADMIN_PASSWORD: "{{ zk.secrets.grafana_admin_passwd }}"
                 residency:
@@ -144,7 +142,7 @@
                   subdomain: '/influxdb/'
                   upstream_name: 'influxdb'
                   traefik.enable: "true"
-                  traefik.frontend.rule: "Path:/influxdb"
+                  traefik.frontend.rule: "PathPrefixStrip:/influxdb"
 
                 uris:
                     - "{{ influxdb_conf_url }}"

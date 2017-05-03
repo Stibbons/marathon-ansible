@@ -13,13 +13,13 @@
             cpus: 1
             mem: 512
             disk: 0
-            instances: 1
-            cmd: gunicorn app:app
+            instances: 0
+            cmd: gunicorn -b :8000 app:app
             container:
               type: DOCKER
               volumes: []
               docker:
-                image: forestscribe/github_hooks
+                image: forestscribe/github_hook
                 network: BRIDGE
                 privileged: false
                 parameters: "{{ docker_log_driver_parameters }}"
@@ -29,7 +29,7 @@
                   protocol: tcp
                   servicePort: "{{ servicePorts.github_hooks }}"
             env:
-                CELERY_BROKER_URL: redis://{{docker_ip}}:servicePorts.redis
+                CELERY_BROKER_URL: redis://{{docker_ip}}:{{servicePorts.redis}}/1
             labels:
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: "172.17.0.1"
@@ -38,25 +38,25 @@
               traefik.enable: "true"
               traefik.frontend.rule: "Host:github_hooks.{{ sub_domain }}"
 
-            healthChecks:
-            - "{{ basic_http_health_check }}"
+            # healthChecks:
+            # - "{{ basic_http_health_check }}"
 
         -
             id: githubhooksworker
-            cpus: 1
-            mem: 512
+            cpus: 5
+            mem: 1024
             disk: 0
-            instances: 2
-            cmd: pypy3 github_hooks.py
+            instances: 0
+            cmd: celery worker -c 5 -A github_hooks
             container:
               type: DOCKER
               volumes: []
               docker:
-                image: forestscribe/github_hooks
+                image: forestscribe/github_hook
                 network: BRIDGE
                 privileged: false
                 parameters: "{{ docker_log_driver_parameters }}"
                 forcePullImage: true
                 portMappings: []
             env:
-                CELERY_BROKER_URL: redis://{{docker_ip}}:servicePorts.redis
+                CELERY_BROKER_URL: redis://{{docker_ip}}:{{servicePorts.redis}}/1

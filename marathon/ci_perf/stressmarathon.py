@@ -16,6 +16,9 @@ EXTERNAL_URL, _ = zk.get("/etc/cloud/nginx_external_url")
 MASTER_URL = EXTERNAL_URL + "/ci_perf_buildbot/"
 INFLUX_URL = EXTERNAL_URL + "/influxdb/"
 
+MAX_WORKERS = 241
+MAX_WORKERS_CONTAINERS = 15
+
 
 def waitQuiet():
     while True:
@@ -36,23 +39,52 @@ def waitMaster():
         try:
             r = requests.get(
                 url + "api/v2/forceschedulers/force", verify=False)
-            print r.status_code
+            print "forcescheduler API status_code: ", r.status_code
             if r.status_code == 200:
                 return
         except:
             pass
         time.sleep(1)
 
-def restartPgAndMaster():
-    print "stopping buildbot"
+def waitAllConnected():
+    print "waiting all workers connected"
+    while True:
+        url = MASTER_URL
+        try:
+            r = requests.get(
+                url + "api/v2/workers?field=name&field=connected_to", verify=False)
+            if r.status_code == 200:
+                workers = [worker for worker in r.json()['workers'] if len(worker['connected_to'])>0]
+                print "connected workers: ", len(workers)
+                if len(workers) >= MAX_WORKERS:
+                    return
+            else:
+                print "worker list API status_code: ", r.status_code
+                print r.content
+        except Exception as e:
+            print e
+            pass
+        time.sleep(1)
+
+def restartPgAndMaster(num_masters):
+    print "stopping buildbot and workers"
+    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/worker?force=True", json={"instances": 0})
     requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot?force=True", json={"instances": 0})
     print "restarting pg"
     requests.post(MARATHON_URL + "/v2/apps/ciperf/backend/pg/restart")
     waitQuiet()
+    zk.delete("/workers", recursive=True)
     print "restarting buildbot"
     requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot?force=True", json={"instances": 1})
     waitQuiet()
     waitMaster()
+    print "scaling buildbot"
+    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot?force=True", json={"instances": num_masters})
+    waitQuiet()
+    waitMaster()
+    print "scaling workers"
+    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/worker?force=True", json={"instances": MAX_WORKERS_CONTAINERS})
+    waitAllConnected()
 
 
 def sendCollectd(datas):
@@ -68,30 +100,25 @@ def sendCollectd(datas):
 @argh.arg('num_masters', type=int)
 def main(num_builds, num_workers, num_masters, config_kind, numlines, sleep, firstRestart=False):
     if firstRestart:
-        restartPgAndMaster()
+        restartPgAndMaster(num_masters)
     if num_masters == 0:
         return
-    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot?force=True", json={"instances": num_masters})
     config_kind += str(num_masters)
     waitQuiet()
     url = MASTER_URL
-    print "stop workers"
-    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/worker?force=True", json={"instances": 0})
-    waitQuiet()
-    print "create {} build".format(num_builds)
     waitMaster()
+    print "create {} build".format(num_builds)
     start = time.time()
     for i in xrange(num_builds):
         r = requests.post(
             url + "api/v2/forceschedulers/force",
             json={"id": 1, "jsonrpc": "2.0", "method": "force", "params": {
-                "builderid": "1", "username": "", "reason": "force build",
+                "builderNames": ['runtests' + str(num_workers)], "username": "", "reason": "force build",
                 "project": "", "repository": "", "branch": "", "revision": "",
                 "NUMLINES": str(numlines),
                 "SLEEP": str(sleep)}}, verify=False)
         r.raise_for_status()
-    print "create {} workers".format(num_workers)
-    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/worker?force=True", json={"instances": num_workers})
+        print "force result: ", r.status_code, r.content
     finished = False
     builds = []
     latencies = []

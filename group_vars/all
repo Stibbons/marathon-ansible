@@ -39,6 +39,7 @@ servicePorts:
     ngrok:            30060
 
     artifactory:      30070
+    nexus:            30071
 
     zk_http:          30080
 
@@ -98,6 +99,7 @@ marathon_num_agents: "5" #{{ zk.cloud.mesos_num_agents}}"
 
 # config files can be downloaded via marathon_uri using this service (see influxdb for an example)
 zk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
+gzk_http_url: "http://{{ docker_ip }}:{{ servicePorts.zk_http }}"
 
 
 marathon_uri: "{{ zk.cloud.marathon_uri }}"
@@ -142,3 +144,7 @@ docker_log_driver_parameters:
       value: "labels={% raw %}{{.ImageName}},{{ (.ExtraAttributes nil).MARATHON_APP_ID }},{{ (.ExtraAttributes nil).MESOS_TASK_ID }},{{ (.ExtraAttributes nil).HOST }},{{ (.ExtraAttributes nil).MARATHON_APP_VERSION }},{{ (.ExtraAttributes nil).MARATHON_APP_DOCKER_IMAGE }}{% endraw %}"
     - key: log-opt
       value: "env=MARATHON_APP_ID,MESOS_TASK_ID,HOST,MARATHON_APP_VERSION,MARATHON_APP_DOCKER_IMAGE"
+
+docker_parameters_run_as_root:
+    - key: user
+      value: root

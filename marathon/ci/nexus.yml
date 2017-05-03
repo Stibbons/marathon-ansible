@@ -1,13 +1,13 @@
 - name: Deploy ci artifact store
   marathon:
     marathon_uri: "{{ marathon_uri }}"
-    group_id: ci/artifactory
+    group_id: ci/nexus
     group_json:
         dependencies:
             - /core/lb
             - /core/logging
         apps:
-        -   id: artifactory
+        -   id: nexus
             cpus: 1
             mem: 4096
             disk: 0
@@ -15,24 +15,25 @@
             container:
               type: DOCKER
               volumes:
-              - containerPath: "artidata"
+              - containerPath: "nexusdata"
                 mode: "RW"
                 persistent:
                  type: "root"
                  size: 1000000
-              - containerPath: "/var/opt/jfrog/artifactory"
-                hostPath: "artidata"
+              - containerPath: "/nexus-data"
+                hostPath: "nexusdata"
                 mode: "RW"
               docker:
-                image: "docker.bintray.io/jfrog/artifactory-oss:latest"
+                image: "sonatype/nexus3"
                 network: BRIDGE
                 privileged: false
-                parameters: "{{ docker_log_driver_parameters }}"
+                parameters: "{{ docker_log_driver_parameters + docker_parameters_run_as_root}}"
+                cmd: "chown nexus /data-nexus && su nexus -c 'bin/nexus run'"
                 forcePullImage: true
                 portMappings:
                 - containerPort: 8081
                   protocol: tcp
-                  servicePort: "{{ servicePorts.artifactory }}"
+                  servicePort: "{{ servicePorts.nexus }}"
             healthChecks:
             - "{{ basic_http_health_check }}"
             residency:
@@ -44,4 +45,4 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Host:artifactory.{{ sub_domain }}"
+              traefik.frontend.rule: "Host:nexus.{{ sub_domain }}"

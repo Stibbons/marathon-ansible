@@ -3,10 +3,10 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [packages]
-psutil = "*"
-requests = "*"
-zkie = "*"
-ansible = "*"
 statistics = "*"
-"mesos.cli" = "*"
 kazoo = "*"
+"mesos.cli" = "*"
+ansible = "*"
+psutil = "*"
+zkie = "*"
+requests = "*"

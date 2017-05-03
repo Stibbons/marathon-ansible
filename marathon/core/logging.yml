@@ -1,6 +1,6 @@
 - vars:
     logstash_conf_path: "/etc/logstash/logstash.conf"
-    logstash_conf_url: "{{ zk_http_url }}/{{ logstash_conf_path }}"
+    logstash_conf_url: "{{ zk_http_discovered_url }}{{ logstash_conf_path }}"
     logtrail_conf_path: "/etc/logtrail/logtrail.json"
     logtrail_conf_url: "{{ zk_http_url }}/{{ logtrail_conf_path }}"
 
@@ -60,7 +60,7 @@
                       subdomain: '/elasticsearch/'
                       upstream_name: 'elasticsearch'
                       traefik.enable: "true"
-                      traefik.frontend.rule: "Path:/elasticsearch"
+                      traefik.frontend.rule: "PathPrefixStrip:/elasticsearch"
                     env:
                         PORT: "9200"
                     residency:
@@ -109,21 +109,14 @@
                 -   id: "logstash"
                     cpus: 1
                     mem: 1024
-                    instances: 2
+                    instances: "{{ marathon_num_agents }}"
                     constraints:
                     - [ "hostname", "UNIQUE" ]
                     container:
                       type: DOCKER
                       docker:
                         image: logstash:5
-                        network: BRIDGE
-                        portMappings:
-                        - containerPort:  "{{ servicePorts.syslog }}"
-                          servicePort: "{{ servicePorts.syslog }}"
-                          protocol: tcp
-                        - containerPort:  "{{ servicePorts.logstash }}"
-                          servicePort: "{{ servicePorts.logstash }}"
-                          protocol: udp
+                        network: HOST
                     args: ["-f", "/mnt/mesos/sandbox/logstash.conf"]
                     uris:
                         - "{{ logstash_conf_url }}"

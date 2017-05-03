@@ -109,9 +109,8 @@
             labels:
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
-              subdomain: 'neo3j'
               traefik.enable: "true"
-              traefik.frontend.rule: "Host:neo4j.{{ sub_domain }},neo3j.{{ sub_domain }}"
+              traefik.frontend.rule: "Host:neo4j.{{ sub_domain }}"
               traefik.frontend.entryPoints: "http,https,wss"
             env:
                 NEO4J_AUTH: none

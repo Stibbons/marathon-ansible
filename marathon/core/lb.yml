@@ -63,7 +63,7 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Path:/zkhttp"
+              traefik.frontend.rule: "PathPrefixStrip:/zkhttp"
             env:
                 ZK_HOST: "{{ zk_host }}"
 

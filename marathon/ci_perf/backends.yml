@@ -59,5 +59,6 @@
                 POSTGRES_USER: "{{POSTGRES_USER}}"
                 POSTGRES_DB: "{{POSTGRES_DB}}"
                 PGDATA: "/mnt/mesos/sandbox/db"
-            healthChecks:
-            - "{{ basic_tcp_health_check }}"
+            # basic tcp healthcheck produce an error log in postgres..
+            # healthChecks:
+            # - "{{ basic_tcp_health_check }}"

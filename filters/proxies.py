@@ -17,7 +17,7 @@ def zkhttp_discover(marathon_url):
     ret = requests.get(marathon_url + "v2/apps//core/lb/zkhttp")
     if ret.status_code == 200:
         for task in ret.json()['app']['tasks']:
-            return "http://%s:%s/" % (task['host'], task['ports'][0])
+            return "http://%s:%s" % (task['host'], task['ports'][0])
     return ""
 
 

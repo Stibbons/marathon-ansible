@@ -77,7 +77,7 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Path:/sota-registry"
+              traefik.frontend.rule: "PathPrefixStrip:/sota-registry"
             env:
                 HOST: 0.0.0.0
                 PORT: "8083"
@@ -118,7 +118,7 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Path:/sota-resolver"
+              traefik.frontend.rule: "PathPrefixStrip:/sota-resolver"
             env:
                 HOST: 0.0.0.0
                 PORT: "8081"
@@ -161,7 +161,7 @@
               HAPROXY_GROUP: external
               HAPROXY_BIND_ADDR: 172.17.0.1
               traefik.enable: "true"
-              traefik.frontend.rule: "Path:/sota-core"
+              traefik.frontend.rule: "PathPrefixStrip:/sota-core"
             env:
                 HOST: 0.0.0.0
                 PORT: "8080"
