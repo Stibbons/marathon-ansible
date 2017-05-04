@@ -2,6 +2,7 @@ ansible playbook and tools to run Forestscribe infra in marathon
 
     sudo -E pip install kazoo # (install on system needed for deploying Zookeeper tasks)
     export ZK_HOST=<zk_host>:<zk_port>
+    export MARATHON_URI="http://<marathon_host>:<8080>"
     pipenv --two
     pipenv install --ignore-hashes
     pipenv run ansible-playbook marathon/core.yml

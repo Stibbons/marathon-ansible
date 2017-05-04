@@ -230,7 +230,7 @@ address = ":{{ traefik_admin_port }}"
 #
 # Required
 #
-endpoint = "http://tlsisbld126l.tl.{{ top_domain }}:8080"
+endpoint = "{{ marathon_uri }}"
 
 # Enable watch Marathon changes
 #

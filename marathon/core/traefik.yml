@@ -76,7 +76,7 @@
                   - UNIQUE # GROUP_BY not applicable since using HOST network
                 - - hostname
                   - LIKE
-                  - tlsisbld127l.tl.{{ top_domain }}|tlsisbld125l.tl.{{ top_domain }}
+                  - tlsisbld127l.tl.{{ top_domain }}|tlsisbld125l.tl.{{ top_domain }}|tlsisbld013l.tl.{{ top_domain }}|tlsisbld014l.tl.{{ top_domain }}
               uris:
                   - "{{ traefik_conf_url }}"
                   - "{{ zk_http_url }}/certs/forestscribe.crt"
