@@ -3,7 +3,7 @@
     traefik_conf_url: "{{ zk_http_url }}/{{ traefik_conf_path }}"
 
   block:
-    - name: upload traefik conf in zk
+    - name: Upload Traefik conf in ZooKeeper
       znode:
         hosts: "{{ zk_host }}"
         name: "{{ traefik_conf_path }}"
@@ -13,11 +13,8 @@
     - name: "Deploy Traefik Reverse Proxy"
       marathon:
         marathon_uri: "{{ marathon_uri }}"
-        group_id: traefik/
+        group_id: /core/traefik
         group_json:
-          dependencies:
-            - /core/lb
-            - /core/logging
           apps:
             - id: "router"
               cpus: 2
@@ -27,33 +24,15 @@
               args:
                 - "--logLevel=DEBUG"
                 - "--configfile=/mnt/mesos/sandbox/traefik.toml"
-              ports: [80, 443, "{{ traefik_admin_port }}"]
               container:
                 type: DOCKER
                 docker:
-                  # image: "traefik"
-                  image: stibbons31/traefik-workaround-marathon-bad-gateway:workaround_marathon_bad_gateway
+                  image: "containous/traefik:58c786ca8c354a85e7667ade3ab0c859d5402078"
+                  # image: stibbons31/traefik-workaround-marathon-bad-gateway:workaround_marathon_bad_gateway
                   network: "HOST"
-                  # network: "BRIDGE"
                   privileged: true
                   parameters: "{{ docker_log_driver_parameters }}"
                   forcePullImage: true
-                  # portMappings:
-                  #   - containerPort: 80
-                  #     protocol: tcp
-                  #     hostPort: 80
-                  #     name: "http"
-                  #     servicePort: "{{ servicePorts.traefik_http }}"
-                  #   - containerPort: 443
-                  #     protocol: tcp
-                  #     hostPort: 443
-                  #     name: "https"
-                  #     servicePort: "{{ servicePorts.traefik_https }}"
-                  #   - containerPort: {{ traefik_admin_port }}
-                  #     # hostPort: {{ traefik_admin_port }} # do not fix this port, it will prevent future deploy
-                  #     protocol: tcp
-                  #     name: "admin"
-                  #     servicePort: "{{ servicePorts.traefik_admin }}"
                 volumes:
                   - containerPath: "/log"
                     hostPath: "log"

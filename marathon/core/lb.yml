@@ -66,7 +66,6 @@
               traefik.frontend.rule: "PathPrefixStrip:/zkhttp"
             env:
                 ZK_HOST: "{{ zk_host }}"
-
             healthChecks:
             - "{{ basic_http_health_check }}"
 
