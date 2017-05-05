@@ -38,14 +38,22 @@ def waitMaster():
     while True:
         url = MASTER_URL
         try:
+            r = requests.get(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot")
+            state = r.json()['app']
+            if state['tasksHealty'] != state['instances']:
+                continue
+        except:
+            continue
+        try:
             r = requests.get(
                 url + "api/v2/forceschedulers/force", verify=False)
-            print "forcescheduler API status_code: ", r.status_code
+            print "forcescheduler API status_code: ", r.status_code, "\r"
             if r.status_code == 200:
                 return
         except:
             pass
         time.sleep(1)
+
 
 def waitAllConnected():
     print "waiting all workers connected"
@@ -55,17 +63,17 @@ def waitAllConnected():
             r = requests.get(
                 url + "api/v2/workers?field=name&field=connected_to", verify=False)
             if r.status_code == 200:
-                workers = [worker for worker in r.json()['workers'] if len(worker['connected_to'])>0]
-                print "connected workers: ", len(workers)
+                workers = [worker for worker in r.json()['workers'] if len(worker['connected_to']) > 0]
+                print "connected workers: ", len(workers), '\r'
                 if len(workers) >= MAX_WORKERS:
                     return
             else:
-                print "worker list API status_code: ", r.status_code
-                print r.content
+                print "worker list API status_code: ", r.status_code, r.content, '\r'
         except Exception as e:
             print e
             pass
         time.sleep(1)
+
 
 def restartPgAndMaster(num_masters):
     print "stopping buildbot and workers"
@@ -80,11 +88,13 @@ def restartPgAndMaster(num_masters):
     waitQuiet()
     waitMaster()
     print "scaling buildbot"
-    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot?force=True", json={"instances": num_masters})
+    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot?force=True",
+                 json={"instances": num_masters})
     waitQuiet()
     waitMaster()
     print "scaling workers"
-    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/worker?force=True", json={"instances": MAX_WORKERS_CONTAINERS})
+    requests.put(MARATHON_URL + "/v2/apps/ciperf/buildbot/worker?force=True",
+                 json={"instances": MAX_WORKERS_CONTAINERS})
     waitAllConnected()
 
 
@@ -122,7 +132,7 @@ def main(num_builds, num_workers, num_masters, config_kind, numlines, sleep, fir
                 "NUMLINES": str(numlines),
                 "SLEEP": str(sleep)}}, verify=False)
         r.raise_for_status()
-        print "force result: ", r.status_code, r.content
+        print "force result: ", r.status_code, r.content, '\r'
     pool.map(start_build, range(num_builds))
     finished = False
     builds = []

@@ -58,7 +58,7 @@
 
         -   id: "worker"
             cmd:
-            cpus: 2
+            cpus: 4
             mem: 150
             disk: 0
             instances: 15
