@@ -40,9 +40,10 @@ def waitMaster():
         try:
             r = requests.get(MARATHON_URL + "/v2/apps/ciperf/buildbot/buildbot")
             state = r.json()['app']
-            if state['tasksHealty'] != state['instances']:
+            if state['tasksHealthy'] != state['instances']:
                 continue
-        except:
+        except Exception as e:
+            print e
             continue
         try:
             r = requests.get(
@@ -54,7 +55,7 @@ def waitMaster():
             pass
         time.sleep(1)
 
-
+waitMaster()
 def waitAllConnected():
     print "waiting all workers connected"
     while True:
