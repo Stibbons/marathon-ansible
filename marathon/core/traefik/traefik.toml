@@ -140,10 +140,10 @@ address = ":{{ traefik_admin_port }}"
 
   [entryPoints.wss]
     address = ":7687"
-    [entryPoints.wss.tls]
-      [[entryPoints.wss.tls.certificates]]
-        CertFile = "/mnt/mesos/sandbox/forestscribe.crt"
-        KeyFile = "/mnt/mesos/sandbox/forestscribe.key"
+    # [entryPoints.wss.tls]
+    #   [[entryPoints.wss.tls.certificates]]
+    #     CertFile = "/mnt/mesos/sandbox/forestscribe.crt"
+    #     KeyFile = "/mnt/mesos/sandbox/forestscribe.key"
 
 
 #
