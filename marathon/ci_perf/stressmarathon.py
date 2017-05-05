@@ -103,8 +103,10 @@ def sendCollectd(datas):
     for name, value in datas:
         message += 'ciperf {}={} {}\n'.format(
             name, value, int(time.time()))
-    requests.post(INFLUX_URL + "/write?db=mydb", data=message, verify=False)
-
+    try:
+       requests.post(INFLUX_URL + "/write?db=mydb", data=message, verify=False)
+    except:
+       pass
 
 @argh.arg('num_builds', type=int)
 @argh.arg('num_workers', type=int)
@@ -131,9 +133,14 @@ def main(num_builds, num_workers, num_masters, config_kind, numlines, sleep, fir
                 "project": "", "repository": "", "branch": "", "revision": "",
                 "NUMLINES": str(numlines),
                 "SLEEP": str(sleep)}}, verify=False)
+        print "force result: ", r.status_code, r.content, "\r"
         r.raise_for_status()
-        print "force result: ", r.status_code, r.content, '\r'
-    pool.map(start_build, range(num_builds))
+    try:
+        pool.map(start_build, range(num_builds))
+    except:
+        sendCollectd([("restarted", 1)])
+        restartPgAndMaster(num_masters)
+        return 
     finished = False
     builds = []
     latencies = []
@@ -172,7 +179,7 @@ def main(num_builds, num_workers, num_masters, config_kind, numlines, sleep, fir
         if end - start > 1000:
             finished = True  # timeout
             sendCollectd([("restarted", 1)])
-            restartPgAndMaster()
+            restartPgAndMaster(num_masters)
         try:
             requests.delete(MARATHON_URL + "/v2/queue//ciperf/buildbot/worker/delay")
         except:
