@@ -82,6 +82,8 @@ servicePorts:
     traefik_https:            30302
 
     api_gateway:              30310
+    keycloak:                 30400
+    keycloak_pg:              30401
 
 
 traefik_admin_port:     19050

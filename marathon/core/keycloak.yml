@@ -1,0 +1,132 @@
+- vars:
+    - keycloak_conf_path: "/opt/jboss/keycloak/standalone/configuration/standalone.xml"
+      keycloak_conf_url: "{{ zk_http_url }}/{{ keycloak_conf_path }}"
+    - keycloak_logging_path: "/opt/jboss/keycloak/standalone/configuration/logging.properties"
+      keycloak_logging_url: "{{ zk_http_url }}/{{ keycloak_conf_path }}"
+
+  block:
+    # - name: Upload Keycloak conf in ZooKeeper
+    #   znode:
+    #     hosts: "{{ zk_host }}"
+    #     name: "{{ keycloak_conf_path }}"
+    #     value: "{{ lookup('template', 'keycloak/standalone.xml') }}"
+    #     state: present
+    # # - name: Upload Keycloak Logging con in ZooKeeper
+    #   znode:
+    #     hosts: "{{ zk_host }}"
+    #     name: "{{ keycloak_logging_path }}"
+    #     value: "{{ lookup('template', 'keycloak/logging.properties') }}"
+    #     state: present
+
+    - name: "Deploy Keycloak Credential Server"
+      marathon:
+        marathon_uri: "{{ marathon_uri }}"
+        group_id: /core/keycloak
+        group_json:
+          apps:
+            - id: "pg"
+              cmd:
+              cpus: 8
+              mem: 1024
+              disk: 0
+              instances: 1
+              container:
+                type: DOCKER
+                volumes:
+                  - containerPath: "pgdata"
+                    mode: "RW"
+                    persistent:
+                      type: "root"
+                      size: 4096
+                docker:
+                  image: postgres:9.4
+                  network: BRIDGE
+                  privileged: false
+                  parameters: "{{ docker_log_driver_parameters }}"
+                  forcePullImage: false
+                  portMappings:
+                    - containerPort: 5432
+                      protocol: tcp
+                      servicePort: "{{ servicePorts.keycloak_pg }}"
+              residency:
+                taskLostBehavior: "WAIT_FOREVER"
+              upgradeStrategy:
+                minimumHealthCapacity: 0.5
+                maximumOverCapacity: 0 # mandatory for resident app
+              env:
+                POSTGRES_USER: "{{zk.secrets.keycloak_pg_user}}"
+                POSTGRES_PASSWORD: "{{zk.secrets.keycloak_pg_password}}"
+                POSTGRES_DB: "keycloak"
+                PGDATA: "/mnt/mesos/sandbox/pgdata"
+              healthChecks:
+                - "{{ basic_tcp_health_check }}"
+
+            - id: "authserver"
+              dependencies:
+                - /core/keycloak/pg
+              cpus: 1
+              mem: 1024
+              disk: 0
+              instances: 2
+              # args: ["--server-config=/mnt/mesos/sandbox/standalone.xml"]
+              container:
+                type: DOCKER
+                docker:
+                  image: "jboss/keycloak:3.1.0.Final"
+                  # image: "jboss/keycloak-postgres:3.1.0.Final"
+                  # image: "stibbons31/docker-keycloak-pg:3.1.0.Final-pg"
+                  network: "BRIDGE"
+                  privileged: true
+                  parameters: "{{ docker_log_driver_parameters }}"
+                  forcePullImage: false
+                  portMappings:
+                  - containerPort: 8080
+                    servicePort: "{{ servicePorts.keycloak }}"
+                    protocol: tcp
+                # volumes:
+                #   - containerPath: "configuration"
+                #     mode: "RW"
+                #     persistent:
+                #      type: "root"
+                #      size: 10000
+                #   - containerPath: "/opt/jboss/keycloak/standalone/configuration"
+                #     hostPath: "configuration"
+                #     mode: "RW"
+              env:
+                https_proxy: "{{zk.proxy_env.https_proxy}}"
+                HTTPS_PROXY: "{{zk.proxy_env.https_proxy}}"
+                http_proxy: "{{zk.proxy_env.http_proxy}}"
+                HTTP_PROXY: "{{zk.proxy_env.http_proxy}}"
+                no_proxy: "{{zk.proxy_env.no_proxy}}"
+                NO_PROXY: "{{zk.proxy_env.no_proxy}}"
+                ALL_PROXY: "{{zk.proxy_env.ALL_PROXY}}"
+                KEYCLOAK_USER: "{{zk.secrets.keycloak_admin_user}}"
+                KEYCLOAK_PASSWORD: "{{zk.secrets.keycloak_admin_password}}"
+                KEYCLOAK_LOGLEVEL: "DEBUG"
+                PROXY_ADDRESS_FORWARDING: "true"
+                POSTGRES_DB: keycloak
+                POSTGRES_USER: "{{zk.secrets.keycloak_pg_user}}"
+                POSTGRES_PASSWORD: "{{zk.secrets.keycloak_pg_password}}"
+                POSTGRES_HOST: "{{ docker_ip }}"
+                POSTGRES_PORT: "{{ servicePorts.keycloak_pg }}"
+              healthChecks:
+                # Need recent version of marathon
+                - path: "/auth"
+                  protocol: "HTTP"
+                  portIndex: 0
+                  gracePeriodSeconds: 300
+                  intervalSeconds: 30
+                  maxConsecutiveFailures: 3
+              upgradeStrategy:
+                minimumHealthCapacity: 1
+                maximumOverCapacity: 1
+              labels:
+                traefik.enable: "true"
+                # traefik.frontend.rule: "PathPrefixStrip:/auth"
+                traefik.frontend.rule: "Host:auth.{{ sub_domain }}"
+                traefik.backend.healthcheck.path: "/auth"
+              uris:
+                  # - "{{ keycloak_conf_url }}"
+                  # - "{{ keycloak_logging_url }}"
+                  - "{{ zk_http_url }}/certs/forestscribe.crt"
+                  - "{{ zk_http_url }}/certs/forestscribe.key"

@@ -22,7 +22,7 @@
                   type: "root"
                   size: 4096
             docker:
-              image: postgres:9.4
+              image: postgres:9.3 # Keycloak XML config does not seem compatible with 9.4
               network: BRIDGE
               privileged: false
               parameters: "{{ docker_log_driver_parameters }}"
