@@ -27,7 +27,7 @@
               container:
                 type: DOCKER
                 docker:
-                  image: "containous/traefik:58c786ca8c354a85e7667ade3ab0c859d5402078"
+                  image: "traefik:1.3"
                   # image: stibbons31/traefik-workaround-marathon-bad-gateway:workaround_marathon_bad_gateway
                   network: "HOST"
                   privileged: true
